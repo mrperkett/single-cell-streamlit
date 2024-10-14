@@ -2,6 +2,11 @@ from pathlib import Path
 
 import streamlit as st
 
+# using "wide" allows more information to be displayed, but st.pyplot()
+# fills the entire container width, which can be a little unwieldy
+# st.set_page_config(layout="centered")
+st.set_page_config(layout="wide")
+
 dir_path = Path(__file__).parent
 
 
