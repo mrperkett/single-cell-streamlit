@@ -65,6 +65,11 @@ def define_sidebar_filtering_widgets():
         help="Cells where the percent Mitochondrial UMIs is greater than this number will be removed",
     )
 
+    st.session_state.apply_filters_button_clicked = st.sidebar.button(
+        "Apply Filters",
+        help="Apply quality control filters to data",
+    )
+
 
 def run():
     st.markdown("# Quality Control")
@@ -76,13 +81,18 @@ def run():
         st.markdown("**No data has been loaded.  Please run Load Data.**")
         return
 
-    # filter adata based on user selections
-    st.session_state.filtered_adata = filter_adata(
-        st.session_state.adata,
-        st.session_state.min_allowed_genes_in_cell,
-        st.session_state.min_allowed_cells_with_gene,
-        st.session_state.max_allowed_percent_mt,
-    )
+    if "filtered_adata" not in st.session_state:
+        st.session_state.filtered_adata = None
+
+    # "Apply Filters" button clicked
+    if st.session_state.apply_filters_button_clicked:
+        # filter adata based on user selections
+        st.session_state.filtered_adata = filter_adata(
+            st.session_state.adata,
+            st.session_state.min_allowed_genes_in_cell,
+            st.session_state.min_allowed_cells_with_gene,
+            st.session_state.max_allowed_percent_mt,
+        )
 
     # load adata stats
     df_general, df_umis_per_gene, df_umis_per_cell, df_genes_per_cell = get_qc_stats_dataframe(
@@ -90,12 +100,13 @@ def run():
     )
 
     # load filtered_adata stats
-    (
-        df_general_filtered,
-        df_umis_per_gene_filtered,
-        df_umis_per_cell_filtered,
-        df_genes_per_cell_filtered,
-    ) = get_qc_stats_dataframe(st.session_state.filtered_adata)
+    if st.session_state.filtered_adata:
+        (
+            df_general_filtered,
+            df_umis_per_gene_filtered,
+            df_umis_per_cell_filtered,
+            df_genes_per_cell_filtered,
+        ) = get_qc_stats_dataframe(st.session_state.filtered_adata)
 
     # define two columns for output
 
@@ -106,7 +117,10 @@ def run():
         st.dataframe(df_general, width=300)
     with column2:
         st.markdown("## Filtered")
-        st.dataframe(df_general_filtered, width=300)
+        if st.session_state.filtered_adata:
+            st.dataframe(df_general_filtered, width=300)
+        else:
+            st.markdown("Click *Apply Filters* to see filtered plots")
 
     # (UMI count / cell) vs (gene count / cell) colored by (% MT)
     st.markdown("")
@@ -114,7 +128,8 @@ def run():
     with column1:
         display_umi_count_gene_count_scatterplot(st.session_state.adata)
     with column2:
-        display_umi_count_gene_count_scatterplot(st.session_state.filtered_adata)
+        if st.session_state.filtered_adata:
+            display_umi_count_gene_count_scatterplot(st.session_state.filtered_adata)
 
     # jointplot of (UMI count / cell) vs (gene count / cell)
     st.markdown("")
@@ -122,7 +137,8 @@ def run():
     with column1:
         display_log_umi_count_log_gene_count_jointplot(st.session_state.adata)
     with column2:
-        display_log_umi_count_log_gene_count_jointplot(st.session_state.filtered_adata)
+        if st.session_state.filtered_adata:
+            display_log_umi_count_log_gene_count_jointplot(st.session_state.filtered_adata)
 
     # Distribution of UMI count / cell
     st.markdown("#")
@@ -131,8 +147,9 @@ def run():
         display_get_umi_distribution_plot(st.session_state.adata)
         st.dataframe(df_umis_per_cell)
     with column2:
-        display_get_umi_distribution_plot(st.session_state.filtered_adata)
-        st.dataframe(df_umis_per_cell_filtered)
+        if st.session_state.filtered_adata:
+            display_get_umi_distribution_plot(st.session_state.filtered_adata)
+            st.dataframe(df_umis_per_cell_filtered)
 
     # Distribution of gene count / cell
     st.markdown("#")
@@ -141,8 +158,9 @@ def run():
         display_gene_distribution_plot(st.session_state.adata)
         st.dataframe(df_genes_per_cell)
     with column2:
-        display_gene_distribution_plot(st.session_state.filtered_adata)
-        st.dataframe(df_genes_per_cell_filtered)
+        if st.session_state.filtered_adata:
+            display_gene_distribution_plot(st.session_state.filtered_adata)
+            st.dataframe(df_genes_per_cell_filtered)
 
     # Distribution of % MT UMIs
     st.markdown("#")
@@ -150,7 +168,8 @@ def run():
     with column1:
         display_mitochondrial_umi_distribution_plot(st.session_state.adata)
     with column2:
-        display_mitochondrial_umi_distribution_plot(st.session_state.filtered_adata)
+        if st.session_state.filtered_adata:
+            display_mitochondrial_umi_distribution_plot(st.session_state.filtered_adata)
 
 
 run()

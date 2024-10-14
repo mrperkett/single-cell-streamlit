@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 import streamlit as st
 
@@ -112,3 +113,54 @@ def display_mitochondrial_umi_distribution_plot(adata):
     st.pyplot(fig)
     with st.expander("More Info", expanded=False, icon="💭"):
         st.write("description")
+
+
+def display_doublet_detection_info(adata, algorithm="Scrublet"):
+    if algorithm == "Scrublet":
+        display_doublet_detection_info_scrublet(adata)
+    elif algorithm == "Vaeda":
+        raise NotImplementedError("Vaeda algorithm not implemented")
+    else:
+        raise ValueError("algorithm '{algorithm}' not recgonized")
+
+
+def display_doublet_detection_info_scrublet(adata):
+
+    num_predicted_doublets = adata.obs["predicted_doublet"].sum()
+    num_total = len(adata.obs)
+    num_predicted_singlets = num_total - num_predicted_doublets
+
+    data = [
+        ["Singlets", num_predicted_singlets, num_predicted_singlets / num_total * 100.0],
+        ["Doublets", num_predicted_doublets, num_predicted_doublets / num_total * 100.0],
+    ]
+    df = pd.DataFrame(data, columns=["value", "count", "% of total"])
+    df["% of total"] = df["% of total"].round(2)
+    st.dataframe(df)
+
+    fig = get_scrublet_detected_doublet_distribution_plot(adata)
+    st.pyplot(fig)
+    with st.expander(" More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def get_scrublet_detected_doublet_distribution_plot(adata):
+    fig, ax = plt.subplots()
+    idx = adata.obs["predicted_doublet"]
+    sns.histplot(
+        adata.obs.loc[~idx, "doublet_score"], bins=50, stat="count", ax=ax, label="Singlets"
+    )
+    sns.histplot(
+        adata.obs.loc[idx, "doublet_score"],
+        bins=50,
+        stat="count",
+        color="red",
+        ax=ax,
+        label="Doublets",
+    )
+    ax.legend()
+    ax.set_xlabel("Doublet Score")
+    ax.set_ylabel("Barcode Count")
+    ax.set_title("Detected Doublet Distribution")
+
+    return fig
