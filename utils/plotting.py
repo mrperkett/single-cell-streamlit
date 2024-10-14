@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
+import scanpy as sc
 import seaborn as sns
 import streamlit as st
 
@@ -48,7 +50,9 @@ def get_log_umi_count_log_gene_count_jointplot(adata):
 
 def get_umi_distribution_plot(adata):
     fig, ax = plt.subplots()
-    sns.histplot(adata.obs["total_counts"], ax=ax)
+    total_umis_by_cell = np.array(adata.X.astype(int).sum(axis=1)).flatten()
+    # sns.histplot(adata.obs["total_counts"], ax=ax)
+    sns.histplot(total_umis_by_cell, ax=ax)
     ax.set_xlabel("UMI Count", fontsize=16)
     ax.set_ylabel("Barcode Count", fontsize=16)
     ax.set_title("Distribution for UMI Count / Barcode", fontsize=18)
@@ -164,3 +168,9 @@ def get_scrublet_detected_doublet_distribution_plot(adata):
     ax.set_title("Detected Doublet Distribution")
 
     return fig
+
+
+def display_highly_variable_genes_plot(adata):
+    sc.pl.highly_variable_genes(adata)
+    fig = plt.gcf()
+    st.pyplot(fig)

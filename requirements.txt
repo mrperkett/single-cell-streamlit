@@ -8,5 +8,7 @@ pooch==1.8.2
 PyYAML==6.0.2
 scanpy==1.10.3
 scikit-image==0.24.0
+scikit-learn==1.5.2
+scikit-misc==0.5.1
 seaborn==0.13.2
 streamlit==1.39.0
