@@ -69,3 +69,25 @@ def mark_highly_variable_genes(adata, algorithm, **kwargs):
         )
     else:
         raise ValueError(f"algorithm '{algorithm}' not recognized")
+
+
+def run_pca(adata, n_comps, use_highly_variable, random_state):
+    sc.tl.pca(
+        adata, n_comps=n_comps, use_highly_variable=use_highly_variable, random_state=random_state
+    )
+
+
+def run_umap(adata, min_dist, spread, random_state, alpha):
+    sc.pp.neighbors(adata)
+    sc.tl.umap(adata, min_dist=min_dist, spread=spread, random_state=random_state, alpha=alpha)
+
+
+def run_tsne(adata, n_pcs, perplexity, early_exaggeration, learning_rate, random_state):
+    sc.tl.tsne(
+        adata,
+        n_pcs=n_pcs,
+        perplexity=perplexity,
+        early_exaggeration=early_exaggeration,
+        learning_rate=learning_rate,
+        random_state=random_state,
+    )

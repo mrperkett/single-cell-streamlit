@@ -39,6 +39,10 @@ def display_sidebar():
         help="Run detect doublets",
     )
 
+    # action when "Detect Doublets" is clicked
+    if st.session_state.detect_doublets_clicked:
+        run_detect_doublets()
+
     # Remove Doublets button
     st.session_state.remove_doublets_clicked = st.sidebar.button(
         "Remove Doublets",
@@ -57,24 +61,24 @@ def remove_doublets(adata, algorithm="Scrublet"):
     return doublets_removed_adata
 
 
+def run_detect_doublets():
+    with st.spinner("Doublet detection running.  Please allow 2-3 minutes."):
+        detect_doublets(
+            st.session_state.filtered_adata,
+            st.session_state,
+            st.session_state.doublet_algorithm,
+        )
+    st.session_state.doublets_detection_complete = True
+    st.session_state.removed_doublets_clicked = False
+    st.session_state.doublets_removed_adata = None
+
+
 def run():
 
     if "doublets_detection_complete" not in st.session_state:
         st.session_state.doublets_detection_complete = False
 
     display_sidebar()
-
-    # action when "Detect Doublets" is clicked
-    if st.session_state.detect_doublets_clicked:
-        with st.spinner("Doublet detection running.  Please allow 2-3 minutes."):
-            detect_doublets(
-                st.session_state.filtered_adata,
-                st.session_state,
-                st.session_state.doublet_algorithm,
-            )
-        st.session_state.doublets_detection_complete = True
-        st.session_state.removed_doublets_clicked = False
-        st.session_state.doublets_removed_adata = None
 
     # action when "Remove Doublets" is clicked
     if st.session_state.remove_doublets_clicked:

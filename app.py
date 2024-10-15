@@ -19,7 +19,10 @@ def main():
             st.Page(f"{dir_path}/pages/doublet_detection.py", title="Doublet Detection"),
             st.Page(f"{dir_path}/pages/normalization.py", title="Normalization"),
             st.Page(f"{dir_path}/pages/feature_selection.py", title="Feature Selection"),
-            st.Page(f"{dir_path}/pages/dimensional_reduction.py", title="Dimensional Reduction"),
+            st.Page(f"{dir_path}/pages/dim_reduction_pca.py", title="Dim Reduction: PCA"),
+            st.Page(
+                f"{dir_path}/pages/dim_reduction_umap_tsne.py", title="Dim Reduction: UMAP / t-SNE"
+            ),
             st.Page(f"{dir_path}/pages/clustering.py", title="Clustering"),
         ]
     )

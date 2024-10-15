@@ -174,3 +174,157 @@ def display_highly_variable_genes_plot(adata):
     sc.pl.highly_variable_genes(adata)
     fig = plt.gcf()
     st.pyplot(fig)
+
+
+def display_ranked_pca_importance(adata):
+    # MRP
+    data = [
+        [n, variance_ratio] for n, variance_ratio in enumerate(adata.uns["pca"]["variance_ratio"])
+    ]
+    plot_df = pd.DataFrame(data, columns=["component", "variance_ratio"])
+
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax = sns.barplot(plot_df, x="component", y="variance_ratio", orient="x", ax=ax)
+    ax.set_title("Ranked importance of Principal Components", fontsize=18)
+    ax.set_ylabel("Variance Ratio", fontsize=20)
+    ax.set_xlabel("Principal Component", fontsize=20)
+    xticklabels = [
+        "",
+    ] * len(plot_df)
+    for i in range(0, len(plot_df), 5):
+        xticklabels[i] = str(i)
+    ax.set_xticklabels(xticklabels)
+
+    st.pyplot(fig)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def display_cumulative_pca_importance(adata):
+    x = np.arange(0, len(adata.uns["pca"]["variance_ratio"]), 1)
+    y = np.cumsum(adata.uns["pca"]["variance_ratio"])
+
+    fig, ax = plt.subplots(figsize=(8, 4.75))
+
+    ax.plot(x, y)
+    ax.set_title("Cumulative importance of PCA components", fontsize=18)
+    ax.set_xlabel("PCA component", fontsize=20)
+    ax.set_ylabel("cumulative variance ratio", fontsize=20)
+
+    # set a tick for every principal component, but only label every 5th
+    ax.set_xticks(range(0, len(x)))
+    xticklabels = [
+        "",
+    ] * len(x)
+    for i in range(0, len(x), 5):
+        xticklabels[i] = str(i)
+    ax.set_xticklabels(xticklabels)
+
+    st.pyplot(fig)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def get_top_principal_component_genes(adata, num_principal_components=3, keep_top_n=5):
+    top_df_list = []
+    bottom_df_list = []
+    for pc_num in range(num_principal_components):
+        # get indices that would sort principal component pc_num in descending order
+        idx = np.argsort(adata.varm["PCs"][:, pc_num])
+        idx = idx[-1::-1]
+
+        # build a dataframe with the 'keep_top_n' largest principal component values
+        top_genes = adata.var.iloc[idx[:keep_top_n]].index.tolist()
+        top_values = adata.varm["PCs"][idx[:keep_top_n], pc_num].tolist()
+        top_df = pd.DataFrame(data=zip(top_genes, top_values), columns=["gene", "PC value"])
+        top_df_list.append(top_df)
+
+        # build a dataframe with the 'keep_top_n' smallest principal component values
+        bottom_genes = adata.var.iloc[idx[-keep_top_n - 1 :]].index.tolist()
+        bottom_values = adata.varm["PCs"][idx[-keep_top_n - 1 :], pc_num].tolist()
+        bottom_df = pd.DataFrame(
+            data=zip(bottom_genes, bottom_values), columns=["gene", "PC value"]
+        )
+        bottom_df_list.append(bottom_df)
+
+    # concatenate into two dataframes
+    all_top_df = pd.concat(
+        top_df_list, keys=[f"PC {i+1}" for i in range(num_principal_components)], axis=1
+    )
+    all_bottom_df = pd.concat(
+        bottom_df_list, keys=[f"PC {i+1}" for i in range(num_principal_components)], axis=1
+    )
+
+    return all_top_df, all_bottom_df
+
+
+def display_top_principal_component_genes(adata):
+    all_top_df, all_bottom_df = get_top_principal_component_genes(
+        adata, num_principal_components=3, keep_top_n=5
+    )
+
+    st.markdown("#### Genes with the Largest Principal Component Values")
+    st.dataframe(all_top_df)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+    st.markdown("#### Genes with the Smallest Principal Component Values")
+    st.dataframe(all_bottom_df)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def display_projections_by_sample(adata):
+    st.write("blah")
+
+    sc.pl.pca(
+        adata,
+        color=["sample", "sample"],
+        dimensions=[(0, 1), (2, 3)],
+        size=2,
+        title=["Sample Projection (PC1, PC2)", "Sample Projection (PC3, PC4)"],
+    )
+    fig = plt.gcf()
+    st.pyplot(fig)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def display_projections_by_percent_mt(adata):
+    sc.pl.pca(
+        adata,
+        color=["pct_counts_mt", "pct_counts_mt"],
+        dimensions=[(0, 1), (2, 3)],
+        size=2,
+        title=["% MT Projection (PC1, PC2)", "% MT Projection (PC3, PC4)"],
+    )
+    fig = plt.gcf()
+    st.pyplot(fig)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def display_umap_results(adata):
+    sc.pl.umap(
+        adata,
+        color="sample",
+        # Setting a smaller point size to get prevent overlap
+        size=2,
+    )
+    fig = plt.gcf()
+    st.pyplot(fig)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
+
+
+def display_tsne_results(adata):
+    sc.pl.tsne(
+        adata,
+        color="sample",
+        # Setting a smaller point size to get prevent overlap
+        size=2,
+    )
+    fig = plt.gcf()
+    st.pyplot(fig)
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write("description")
