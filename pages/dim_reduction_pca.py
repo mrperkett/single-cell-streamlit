@@ -1,5 +1,6 @@
 import streamlit as st
 
+from utils.analysis import run_pca
 from utils.plotting import (
     display_cumulative_pca_importance,
     display_projections_by_percent_mt,
@@ -7,7 +8,6 @@ from utils.plotting import (
     display_ranked_pca_importance,
     display_top_principal_component_genes,
 )
-from utils.preprocessing import run_pca
 
 
 def display_sidebar():

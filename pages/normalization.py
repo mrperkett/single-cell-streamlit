@@ -1,7 +1,7 @@
 import streamlit as st
 
+from utils.analysis import run_normalization
 from utils.plotting import display_get_umi_distribution_plot
-from utils.preprocessing import run_normalization
 
 
 def display_sidebar():

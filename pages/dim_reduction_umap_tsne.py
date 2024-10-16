@@ -1,7 +1,7 @@
 import streamlit as st
 
+from utils.analysis import run_tsne, run_umap
 from utils.plotting import display_tsne_results, display_umap_results
-from utils.preprocessing import run_tsne, run_umap
 
 
 def display_umap_options():

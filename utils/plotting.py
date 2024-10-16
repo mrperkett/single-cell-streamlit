@@ -328,3 +328,29 @@ def display_tsne_results(adata):
     st.pyplot(fig)
     with st.expander("More Info", expanded=False, icon="💭"):
         st.write("description")
+
+
+def display_clustering(adata, clustering_method, visualization_type):
+    # set the label by which to color plots based on the clustering_method
+    if clustering_method == "Leiden":
+        label = "leiden"
+    elif clustering_method == "Louvain":
+        label = "louvain"
+    else:
+        raise ValueError(f"clustering_method '{clustering_method}' not recognized")
+
+    # Plot the UMAP or t-SNE projection by clustering method
+    if visualization_type == "UMAP":
+        sc.pl.umap(adata, color=[label])
+        fig = plt.gcf()
+        st.pyplot(fig)
+        with st.expander("More Info", expanded=False, icon="💭"):
+            st.write("description")
+    elif visualization_type == "t-SNE":
+        sc.pl.tsne(adata, color=[label])
+        fig = plt.gcf()
+        st.pyplot(fig)
+        with st.expander("More Info", expanded=False, icon="💭"):
+            st.write("description")
+    else:
+        raise ValueError(f"visualization_type '{visualization_type}' not recognized")

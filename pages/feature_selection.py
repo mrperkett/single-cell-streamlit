@@ -1,7 +1,7 @@
 import streamlit as st
 
+from utils.analysis import mark_highly_variable_genes
 from utils.plotting import display_highly_variable_genes_plot
-from utils.preprocessing import mark_highly_variable_genes
 
 
 def display_sidebar():
