@@ -55,26 +55,21 @@ def run_tsne(adata, n_pcs, perplexity, early_exaggeration, learning_rate, random
     )
 
 
-def run_clustering(adata, session_state):
-    method = session_state.clustering_method
+def run_clustering(adata, page_state):
+    method = page_state.clustering_method
     if method == "Leiden":
-        session_state.leiden_resolution = session_state.current_leiden_resolution
-        session_state.leiden_n_iterations = session_state.current_leiden_n_iterations
-        session_state.leiden_random_state = session_state.current_leiden_random_state
         sc.tl.leiden(
             adata,
             flavor="igraph",
-            resolution=session_state.leiden_resolution,
-            n_iterations=session_state.leiden_n_iterations,
-            random_state=session_state.leiden_random_state,
+            resolution=page_state.leiden_resolution,
+            n_iterations=page_state.leiden_n_iterations,
+            random_state=page_state.leiden_random_state,
         )
     elif method == "Louvain":
-        session_state.louvain_resolution = session_state.current_louvain_resolution
-        session_state.louvain_random_state = session_state.current_louvain_random_state
         sc.tl.louvain(
             adata,
-            resolution=session_state.louvain_resolution,
-            random_state=session_state.louvain_random_state,
+            resolution=page_state.louvain_resolution,
+            random_state=page_state.louvain_random_state,
         )
     else:
         raise ValueError(f"method '{method}' not recognized")
