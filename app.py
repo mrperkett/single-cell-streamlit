@@ -22,7 +22,9 @@ def main():
         "dim_reduction_umap_tsne",
         "clustering",
     ]
-    st.session_state.furthest_step_number_completed = -1
+    # TODO: set furthest_step_number_completed to -1 after all Pages have been updated to use this
+    #       for tracking
+    # st.session_state.furthest_step_number_completed = -1
     st.session_state.furthest_step_number_completed = 7
     page = st.navigation(
         [

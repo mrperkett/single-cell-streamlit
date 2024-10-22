@@ -25,7 +25,7 @@ class ProjectionPageState:
     tsne_learning_rate: Union[int, None] = None
     tsne_random_state: Union[int, None] = None
 
-    # current user selectionss
+    # current user selections
     user_sel_visualization_type: Union[str, None] = None
 
     user_sel_umap_min_dist: Union[float, None] = None
@@ -80,6 +80,8 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
+            # TODO: update normalized_adata location when previous steps store this as
+            # st.session_state.normalization.normalized_adata
             self.state = ProjectionPageState(normalized_adata=st.session_state.normalized_adata)
 
     def display_umap_options(self):

@@ -275,8 +275,6 @@ def display_top_principal_component_genes(adata):
 
 
 def display_projections_by_sample(adata):
-    st.write("blah")
-
     sc.pl.pca(
         adata,
         color=["sample", "sample"],
