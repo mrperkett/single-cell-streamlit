@@ -314,7 +314,9 @@ def display_umap_results(adata):
     fig = plt.gcf()
     st.pyplot(fig)
     with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+        st.markdown(
+            "This plot provides a visualization of the entire dataset where each point corresponds to a barcode (i.e. a cell in most cases) and the colors correspond to the sample.  Barcodes that have similar expression profiles are near each other and barcodes that have different expression profiles appear far apart.  The exact shape can be tuned using the parameters to the left.  The algorithm is stochastic and so if you run with a different *random state*, you will get different results. This projection is based on the [McInnes et al., 2018](https://umap-learn.readthedocs.io/en/latest/) publication."
+        )
 
 
 def display_tsne_results(adata):

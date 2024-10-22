@@ -73,3 +73,25 @@ def run_clustering(adata, page_state):
         )
     else:
         raise ValueError(f"method '{method}' not recognized")
+
+
+def run_dimensional_reduction_projection(adata, page_state):
+    if page_state.visualization_type == "UMAP":
+        run_umap(
+            adata=adata,
+            min_dist=page_state.umap_min_dist,
+            spread=page_state.umap_spread,
+            random_state=page_state.umap_random_state,
+            alpha=page_state.umap_alpha,
+        )
+    elif page_state.visualization_type == "t-SNE":
+        run_tsne(
+            adata=adata,
+            n_pcs=page_state.tsne_n_pcs,
+            perplexity=page_state.tsne_perplexity,
+            early_exaggeration=page_state.tsne_early_exaggeration,
+            learning_rate=page_state.tsne_learning_rate,
+            random_state=page_state.tsne_random_state,
+        )
+    else:
+        raise ValueError(f"visualization_type '{page_state.visualization_type}' not recognized")

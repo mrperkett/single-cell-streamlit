@@ -11,6 +11,19 @@ dir_path = Path(__file__).parent
 
 
 def main():
+    st.session_state.page_completion_order = [
+        "introduction",
+        "load_data",
+        "quality_control",
+        "doublet_detection",
+        "normalization",
+        "feature selection",
+        "dim_reduction_pca",
+        "dim_reduction_umap_tsne",
+        "clustering",
+    ]
+    st.session_state.furthest_step_number_completed = -1
+    st.session_state.furthest_step_number_completed = 7
     page = st.navigation(
         [
             st.Page(f"{dir_path}/pages/introduction.py", title="Introduction"),

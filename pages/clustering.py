@@ -65,8 +65,8 @@ class Page:
             self.state = copy.copy(page_state)
         else:
             self.state = ClusteringPageState(
-                normalized_adata=st.session_state.normalized_adata,
-                visualization_type=st.session_state.visualization_type,
+                normalized_adata=st.session_state.projection.normalized_adata,
+                visualization_type=st.session_state.projection.visualization_type,
             )
         self.run_clustering_clicked = False
 
@@ -126,8 +126,8 @@ class Page:
                 if self.state.clustering_method
                 else 0
             ),
-            help="Clustering Method to use.  The current recommendation of Scanpy and Seurat is to use"
-            " the Leiden method."
+            help="Clustering Method to use.  The current recommendation of Scanpy and Seurat is to"
+            " use the Leiden method."
             "\n\nLeiden: https://www.nature.com/articles/s41598-019-41695-z"
             "\n\nLouvain: https://iopscience.iop.org/article/10.1088/1742-5468/2008/10/P10008",
         )
@@ -166,9 +166,18 @@ class Page:
 
     def run(self):
         st.markdown("# Clustering")
+        page_step_number = st.session_state.page_completion_order.index("clustering")
+
+        # If the previous step has not been completed, display a message to the user and return
+        if st.session_state.furthest_step_number_completed < page_step_number - 1:
+            st.write("Please complete the previous step before running this step")
+            return
+
+        # Otherwise, run the page
         self.display_sidebar()
         if self.run_clustering_clicked:
             self.run_clustering()
+            st.session_state.furthest_step_number_completed = page_step_number
         self.display_clustering()
 
 
