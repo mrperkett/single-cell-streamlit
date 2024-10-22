@@ -80,9 +80,7 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            # TODO: update normalized_adata location when previous steps store this as
-            # st.session_state.normalization.normalized_adata
-            self.state = ProjectionPageState(normalized_adata=st.session_state.normalized_adata)
+            self.state = ProjectionPageState(normalized_adata=st.session_state.pca.normalized_adata)
 
     def display_umap_options(self):
         self.state.user_sel_umap_min_dist = st.sidebar.number_input(

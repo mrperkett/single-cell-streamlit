@@ -49,9 +49,9 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            # TODO: update normalized_adata location when previous steps store this as
-            # st.session_state.normalization.normalized_adata
-            self.state = PCAPageState(normalized_adata=st.session_state.normalized_adata)
+            self.state = PCAPageState(
+                normalized_adata=st.session_state.feature_selection.normalized_adata
+            )
         self.run_pca_button_clicked = False
 
     def display_sidebar(self):

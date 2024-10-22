@@ -34,10 +34,8 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            # TODO: update normalized_adata location when previous steps store this as
-            # st.session_state.normalization.normalized_adata
             self.state = FeatureSelectionPageState(
-                normalized_adata=st.session_state.normalized_adata
+                normalized_adata=st.session_state.normalization.normalized_adata
             )
 
     def display_sidebar(self):
@@ -60,11 +58,11 @@ class Page:
         self.state.update()
 
         mark_highly_variable_genes(
-            st.session_state.normalized_adata, st.session_state.feature_selection_algorithm
+            self.state.normalized_adata, self.state.feature_selection_algorithm
         )
 
         # save state to global st.session_state
-        st.session_state.feature_selection_complete = True
+        self.state.feature_selection_complete = True
         self.save_to_session_state()
 
     def save_to_session_state(self):
@@ -93,8 +91,8 @@ class Page:
             if "clustering" in st.session_state:
                 st.session_state.clustering.clustering_complete = False
 
-        if st.session_state.feature_selection_complete:
-            display_highly_variable_genes_plot(st.session_state.normalized_adata)
+        if self.state.feature_selection_complete:
+            display_highly_variable_genes_plot(self.state.normalized_adata)
         else:
             st.write("Feature selection has not been run.")
 
