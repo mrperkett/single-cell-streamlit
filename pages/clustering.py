@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 from typing import Union
 
@@ -10,8 +11,7 @@ from utils.plotting import display_clustering
 
 @dataclass
 class ClusteringPageState:
-    # parameters selected by user
-    clustering_complete: bool = False
+    # user selections when clustering was last run
     clustering_method: Union[str, None] = None
 
     leiden_resolution: Union[float, None] = None
@@ -21,20 +21,31 @@ class ClusteringPageState:
     louvain_resolution: Union[float, None] = None
     louvain_random_state: Union[int, None] = None
 
+    # current user selections
+    user_sel_clustering_method: Union[str, None] = None
+
+    user_sel_leiden_resolution: Union[float, None] = None
+    user_sel_leiden_n_iterations: Union[int, None] = None
+    user_sel_leiden_random_state: Union[int, None] = None
+
+    user_sel_louvain_resolution: Union[float, None] = None
+    user_sel_louvain_random_state: Union[int, None] = None
+
     # parameters not selected by user
+    clustering_complete: bool = False
     normalized_adata: Union[AnnData, None] = None
     visualization_type: Union[str, None] = None
 
     def reset(self):
-        self.clustering_complete = False
         self.clustering_method = None
         self.leiden_resolution = None
         self.leiden_n_iterations = None
         self.leiden_random_state = None
         self.louvain_resolution = None
         self.louvain_random_state = None
+        self.clustering_complete = False
 
-    def save(self):
+    def update(self):
         self.clustering_method = self.user_sel_clustering_method
 
         if self.clustering_method == "Leiden":
@@ -48,101 +59,121 @@ class ClusteringPageState:
             raise ValueError(f"clustering method '{self.clustering_method}' not recognized")
 
 
-def display_clustering_method_options(clustering_method):
-    page_state = st.session_state.clustering
-    if clustering_method == "Leiden":
+class Page:
+    def __init__(self, page_state=None):
+        if page_state:
+            self.state = copy.copy(page_state)
+        else:
+            self.state = ClusteringPageState(
+                normalized_adata=st.session_state.normalized_adata,
+                visualization_type=st.session_state.visualization_type,
+            )
+        self.run_clustering_clicked = False
 
-        page_state.user_sel_leiden_resolution = st.sidebar.number_input(
+    def display_leiden_options(self):
+        self.state.user_sel_leiden_resolution = st.sidebar.number_input(
             "resolution",
             min_value=0.01,
-            value=page_state.leiden_resolution if page_state.leiden_resolution else 1.0,
+            value=self.state.leiden_resolution if self.state.leiden_resolution else 1.0,
             help="A parameter that controls the coarseness of the clustering.  Larger values result"
             " in more clusters",
         )
-        page_state.user_sel_leiden_n_iterations = st.sidebar.number_input(
+        self.state.user_sel_leiden_n_iterations = st.sidebar.number_input(
             "Number of iterations",
             min_value=-1,
-            value=page_state.leiden_n_iterations if page_state.leiden_n_iterations else 2,
+            value=self.state.leiden_n_iterations if self.state.leiden_n_iterations else 2,
             help="How many iterations of the algorithm to run.  -1 indicates it will run until it"
             " reaches an optimal clustering. (default: 2)",
         )
-        page_state.user_sel_leiden_random_state = st.sidebar.number_input(
+        self.state.user_sel_leiden_random_state = st.sidebar.number_input(
             "Random state",
             min_value=0,
-            value=page_state.leiden_random_state if page_state.leiden_random_state else 0,
+            value=self.state.leiden_random_state if self.state.leiden_random_state else 0,
             help="Random state to use",
         )
 
-    elif clustering_method == "Louvain":
-        page_state.user_sel_louvain_resolution = st.sidebar.number_input(
+    def display_louvain_options(self):
+        self.state.user_sel_louvain_resolution = st.sidebar.number_input(
             "resolution",
             min_value=0.01,
-            value=page_state.louvain_resolution if page_state.louvain_resolution else 1.0,
+            value=self.state.louvain_resolution if self.state.louvain_resolution else 1.0,
             help="A parameter that controls the coarseness of the clustering.  Larger values result"
             " in more clusters",
         )
-        page_state.user_sel_louvain_random_state = st.sidebar.number_input(
+        self.state.user_sel_louvain_random_state = st.sidebar.number_input(
             "Random state",
             min_value=0,
-            value=page_state.louvain_random_state if page_state.louvain_random_state else 0,
+            value=self.state.louvain_random_state if self.state.louvain_random_state else 0,
             help="Random state to use",
         )
-    else:
-        raise ValueError(f"cluster_method '{clustering_method}' not recognized")
 
+    def display_clustering_method_options(self, clustering_method):
+        if clustering_method == "Leiden":
+            self.display_leiden_options()
+        elif clustering_method == "Louvain":
+            self.display_louvain_options()
+        else:
+            raise ValueError(f"cluster_method '{clustering_method}' not recognized")
 
-def display_sidebar():
-    # TODO: add KMeans using sklearn implementation
-    page_state = st.session_state.clustering
-    options_list = ["Leiden", "Louvain"]
-    page_state.user_sel_clustering_method = st.sidebar.selectbox(
-        "Clustering Method",
-        options=options_list,
-        index=(
-            options_list.index(page_state.clustering_method) if page_state.clustering_method else 0
-        ),
-        help="Clustering Method to use.  The current recommendation of Scanpy and Seurat is to use"
-        " the Leiden method."
-        "\n\nLeiden: https://www.nature.com/articles/s41598-019-41695-z"
-        "\n\nLouvain: https://iopscience.iop.org/article/10.1088/1742-5468/2008/10/P10008",
-    )
-
-    display_clustering_method_options(page_state.user_sel_clustering_method)
-
-    run_clustering_clicked = st.sidebar.button("Run Clustering")
-
-    if run_clustering_clicked:
-        page_state.reset()
-        page_state.save()
-        run_clustering(page_state.normalized_adata, page_state)
-        page_state.clustering_complete = True
-
-
-def run():
-
-    # add ClusteringPageState to track state if it hasn't already been initialized
-    if "clustering" not in st.session_state:
-        # if True:
-        st.session_state.clustering = ClusteringPageState(
-            normalized_adata=st.session_state.normalized_adata,
-            visualization_type=st.session_state.visualization_type,
+    def display_sidebar(self):
+        # TODO: add KMeans using sklearn implementation
+        options_list = ["Leiden", "Louvain"]
+        self.state.user_sel_clustering_method = st.sidebar.selectbox(
+            "Clustering Method",
+            options=options_list,
+            index=(
+                options_list.index(self.state.clustering_method)
+                if self.state.clustering_method
+                else 0
+            ),
+            help="Clustering Method to use.  The current recommendation of Scanpy and Seurat is to use"
+            " the Leiden method."
+            "\n\nLeiden: https://www.nature.com/articles/s41598-019-41695-z"
+            "\n\nLouvain: https://iopscience.iop.org/article/10.1088/1742-5468/2008/10/P10008",
         )
 
-    st.markdown("# Clustering")
+        self.display_clustering_method_options(self.state.user_sel_clustering_method)
 
-    display_sidebar()
+        self.run_clustering_clicked = st.sidebar.button("Run Clustering")
 
-    if st.session_state.clustering.clustering_complete:
-        display_clustering(
-            st.session_state.clustering.normalized_adata,
-            st.session_state.clustering.clustering_method,
-            st.session_state.clustering.visualization_type,
-        )
-    else:
-        st.write(
-            "Clustering has not been run.  Select the desired parameters on the left and click Run"
-            " Clustering."
-        )
+    def save_to_session_state(self):
+        st.session_state.clustering = self.state
+
+    def run_clustering(self):
+        # Update state with current user selections
+        self.state.reset()
+        self.state.update()
+
+        # run clustering
+        run_clustering(self.state.normalized_adata, self.state)
+
+        # save state to global st.session_state
+        self.state.clustering_complete = True
+        self.save_to_session_state()
+
+    def display_clustering(self):
+        if self.state.clustering_complete:
+            display_clustering(
+                self.state.normalized_adata,
+                self.state.clustering_method,
+                self.state.visualization_type,
+            )
+        else:
+            st.write(
+                "Clustering has not been run.  Select the desired parameters on the left and click Run"
+                " Clustering."
+            )
+
+    def run(self):
+        st.markdown("# Clustering")
+        self.display_sidebar()
+        if self.run_clustering_clicked:
+            self.run_clustering()
+        self.display_clustering()
 
 
-run()
+if "clustering" in st.session_state:
+    page = Page(page_state=st.session_state.clustering)
+else:
+    page = Page()
+page.run()

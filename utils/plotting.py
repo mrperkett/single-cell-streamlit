@@ -342,15 +342,32 @@ def display_clustering(adata, clustering_method, visualization_type):
     # Plot the UMAP or t-SNE projection by clustering method
     if visualization_type == "UMAP":
         sc.pl.umap(adata, color=[label])
+        ax = plt.gca()
+        ax.set_title(f"{clustering_method} clustering", fontsize=20)
         fig = plt.gcf()
         st.pyplot(fig)
-        with st.expander("More Info", expanded=False, icon="💭"):
-            st.write("description")
+
     elif visualization_type == "t-SNE":
         sc.pl.tsne(adata, color=[label])
+        ax = plt.gca()
+        ax = plt.gca()
+        ax.set_title(f"{clustering_method} clustering", fontsize=20)
         fig = plt.gcf()
         st.pyplot(fig)
-        with st.expander("More Info", expanded=False, icon="💭"):
-            st.write("description")
+
     else:
         raise ValueError(f"visualization_type '{visualization_type}' not recognized")
+
+    with st.expander("More Info", expanded=False, icon="💭"):
+        st.write(
+            f"The clusters calculated using the {clustering_method} algorithm are shown on"
+            f" the {visualization_type} projection calculated in the previous step.  Each"
+            f" point corresponds to a barcode (i.e. a cell in most cases) and the colors"
+            f" correspond to different clusters. Note that the cluster IDs (0, 1, ..) are"
+            f" arbitrary. Barcodes within a cluster are generally"
+            f" more similar to each other than barcodes from neighboring clusters. They"
+            f" often signify groups with similar expression profiles and often distinguish"
+            f" different cell types. Distances"
+            f" between points should be interpreted with caution. See the caveats mentioned"
+            f" in the previous step."
+        )
