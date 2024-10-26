@@ -24,7 +24,7 @@ def detect_doublets(adata, session_state, algorithm="Scrublet"):
     elif algorithm == "Vaeda":
         raise NotImplementedError("Vaeda algorithm not implemented")
     else:
-        raise ValueError("algorithm '{algorithm}' not recgonized")
+        raise ValueError(f"algorithm '{algorithm}' not recgonized")
 
 
 def detect_doublets_scrublet(adata, seed=0, n_prin_comps=30, expected_doublet_rate=0.05):

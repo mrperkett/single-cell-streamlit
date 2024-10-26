@@ -1,111 +1,212 @@
+import copy
+from dataclasses import dataclass
+from typing import Union
+
 import streamlit as st
+from anndata import AnnData
 
 from utils.plotting import display_doublet_detection_info
 from utils.preprocessing import detect_doublets
 
 
-def display_algorithm_options(algorithm):
-    if algorithm == "Scrublet":
-        with st.sidebar.expander("Advanced Options", expanded=False):
-            st.session_state.scrublet_seed = st.number_input(
-                "Random seed", min_value=0, step=1, value=0
-            )
-            st.session_state.scrublet_n_prin_comps = st.number_input(
-                "Num Principal Components", min_value=1, value=30
-            )
-            st.session_state.scrublet_expected_doublet_rate = st.number_input(
-                "Expected Doublet Rate", min_value=0.0, max_value=1.0, value=0.05, step=0.01
-            )
-    elif algorithm == "Vaeda":
-        raise NotImplementedError("Vaeda algorithm not implemented")
-    else:
-        raise ValueError("algorithm '{algorithm}' not recgonized")
+@dataclass
+class DoubletPageState:
+    # user selections when "Detect Doublets" button was last clicked
+    doublet_algorithm: Union[str, None] = None
+    scrublet_seed: Union[int, None] = None
+    scrublet_n_prin_comps: Union[int, None] = None
+    scrublet_expected_doublet_rate: Union[float, None] = None
 
+    # current user selections
+    user_sel_doublet_algorithm: Union[str, None] = None
+    user_sel_scrublet_seed: Union[int, None] = None
+    user_sel_scrublet_n_prin_comps: Union[int, None] = None
+    user_sel_scrublet_expected_doublet_rate: Union[float, None] = None
 
-def display_sidebar():
-    # Algorithm selection and advanced parameters
-    algorithm_options = ["Scrublet"]
-    st.session_state.doublet_algorithm = st.sidebar.selectbox(
-        "Doublet Detection Algorithm",
-        options=algorithm_options,
-        help="The algorithm to use for detecting doublets",
-    )
+    # parameters not selected by user
+    filtered_adata: Union[AnnData, None] = None
+    doublets_detection_complete: bool = False
+    doublet_step_complete: bool = False
 
-    display_algorithm_options(st.session_state.doublet_algorithm)
+    def reset(self):
+        self.doublet_algorithm = None
+        self.scrublet_seed = None
+        self.scrublet_n_prin_comps = None
+        self.scrublet_expected_doublet_rate = None
 
-    # Detect Doublets button
-    st.session_state.detect_doublets_clicked = st.sidebar.button(
-        "Detect Doublets",
-        help="Run detect doublets",
-    )
-
-    # action when "Detect Doublets" is clicked
-    if st.session_state.detect_doublets_clicked:
-        run_detect_doublets()
-
-    # Remove Doublets button
-    st.session_state.remove_doublets_clicked = st.sidebar.button(
-        "Remove Doublets",
-        help="Remove detected doublets",
-        disabled=not st.session_state.doublets_detection_complete,
-    )
-
-
-def remove_doublets(adata, algorithm="Scrublet"):
-    if algorithm == "Scrublet":
-        doublets_removed_adata = adata[~adata.obs["predicted_doublet"]].copy()
-    elif algorithm == "Vaeda":
-        raise NotImplementedError("Vaeda algorithm not implemented")
-    else:
-        raise ValueError("algorithm '{algorithm}' not recgonized")
-    return doublets_removed_adata
-
-
-def run_detect_doublets():
-    with st.spinner("Doublet detection running.  Please allow 2-3 minutes."):
-        detect_doublets(
-            st.session_state.filtered_adata,
-            st.session_state,
-            st.session_state.doublet_algorithm,
-        )
-    st.session_state.doublets_detection_complete = True
-    st.session_state.removed_doublets_clicked = False
-    st.session_state.doublets_removed_adata = None
-
-
-def run():
-
-    if "doublets_detection_complete" not in st.session_state:
-        st.session_state.doublets_detection_complete = False
-
-    display_sidebar()
-
-    # action when "Remove Doublets" is clicked
-    if st.session_state.remove_doublets_clicked:
-        st.session_state.doublets_removed_adata = remove_doublets(
-            st.session_state.filtered_adata, algorithm=st.session_state.doublet_algorithm
-        )
-        st.write("Doublets have been removed!")
-
-    # Display doublet information
-    st.markdown("# Doublet Detection")
-    if st.session_state.doublets_detection_complete:
-
-        st.markdown("## Before doublet removal")
-        display_doublet_detection_info(
-            st.session_state.filtered_adata, algorithm=st.session_state.doublet_algorithm
-        )
-
-        st.markdown("## After doublet removal")
-        if "doublets_removed_adata" in st.session_state and st.session_state.doublets_removed_adata:
-            display_doublet_detection_info(
-                st.session_state.doublets_removed_adata,
-                algorithm=st.session_state.doublet_algorithm,
-            )
+    def update(self):
+        self.doublet_algorithm = self.user_sel_doublet_algorithm
+        if self.doublet_algorithm == "Scrublet":
+            self.scrublet_seed = self.user_sel_scrublet_seed
+            self.scrublet_n_prin_comps = self.user_sel_scrublet_n_prin_comps
+            self.scrublet_expected_doublet_rate = self.user_sel_scrublet_expected_doublet_rate
         else:
-            st.markdown(
-                "No doublets have been removed.  To remove doublets, click the *Remove Doublets* button."
+            raise ValueError(f"doublet_algorithm '{self.doublet_algorithm}' not recognized")
+
+
+class Page:
+
+    def __init__(self, page_state=None):
+        if page_state:
+            self.state = copy.copy(page_state)
+        else:
+            # TODO: update filtered_adata after Quality Control step is refactored
+            self.state = DoubletPageState(filtered_adata=st.session_state.filtered_adata)
+
+    def display_algorithm_advanced_options(self, algorithm):
+        if algorithm == "Scrublet":
+            with st.sidebar.expander("Advanced Options", expanded=False):
+                self.state.user_sel_scrublet_seed = st.number_input(
+                    "Random seed",
+                    min_value=0,
+                    step=1,
+                    value=self.state.scrublet_seed if self.state.scrublet_seed else 0,
+                )
+                self.state.user_sel_scrublet_n_prin_comps = st.number_input(
+                    "Num Principal Components",
+                    min_value=1,
+                    value=(
+                        self.state.scrublet_n_prin_comps if self.state.scrublet_n_prin_comps else 30
+                    ),
+                )
+                self.state.user_sel_scrublet_expected_doublet_rate = st.number_input(
+                    "Expected Doublet Rate",
+                    min_value=0.0,
+                    max_value=1.0,
+                    value=(
+                        self.state.scrublet_expected_doublet_rate
+                        if self.state.scrublet_expected_doublet_rate
+                        else 0.05
+                    ),
+                    step=0.01,
+                )
+        elif algorithm == "Vaeda":
+            raise NotImplementedError("Vaeda algorithm not implemented")
+        else:
+            raise ValueError(f"algorithm '{algorithm}' not recgonized")
+
+    def display_sidebar(self):
+        # Algorithm selection and advanced parameters
+        algorithm_options = ["Scrublet"]
+        self.state.user_sel_doublet_algorithm = st.sidebar.selectbox(
+            "Doublet Detection Algorithm",
+            options=algorithm_options,
+            index=(
+                algorithm_options.index(self.state.doublet_algorithm)
+                if self.state.doublet_algorithm
+                else 0
+            ),
+            help="The algorithm to use for detecting doublets",
+        )
+        self.display_algorithm_advanced_options(self.state.user_sel_doublet_algorithm)
+
+        # Detect Doublets button
+        self.state.detect_doublets_clicked = st.sidebar.button(
+            "Detect Doublets",
+            help="Run detect doublets",
+        )
+
+        # Remove Doublets button
+        self.state.remove_doublets_clicked = st.sidebar.button(
+            "Remove Doublets",
+            help="Remove detected doublets",
+            disabled=not self.state.doublets_detection_complete,
+        )
+
+    def remove_doublets(self, adata, algorithm="Scrublet"):
+        if algorithm == "Scrublet":
+            self.state.doublets_removed_adata = adata[~adata.obs["predicted_doublet"]].copy()
+        elif algorithm == "Vaeda":
+            raise NotImplementedError("Vaeda algorithm not implemented")
+        else:
+            raise ValueError("algorithm '{algorithm}' not recgonized")
+
+        # save state to global st.session_state
+        self.state.doublet_step_complete = True
+        self.save_to_session_state()
+
+    def run_detect_doublets(self):
+        # Update state with current user selections
+        self.state.reset()
+        self.state.update()
+
+        with st.spinner("Doublet detection running.  Please allow 2-3 minutes."):
+            detect_doublets(
+                self.state.filtered_adata,
+                self.state,
+                self.state.doublet_algorithm,
             )
 
+        # save state to global st.session_state
+        self.state.doublets_detection_complete = True
+        self.state.doublet_step_complete = False
+        self.save_to_session_state()
 
-run()
+    def display_doublet_info(self):
+        if self.state.doublets_detection_complete:
+            st.markdown("## Before doublet removal")
+            display_doublet_detection_info(
+                self.state.filtered_adata, algorithm=self.state.doublet_algorithm
+            )
+
+            st.markdown("## After doublet removal")
+            if self.state.doublet_step_complete:
+                display_doublet_detection_info(
+                    self.state.doublets_removed_adata,
+                    algorithm=self.state.doublet_algorithm,
+                )
+            else:
+                st.markdown(
+                    "No doublets have been removed.  To remove doublets, click the *Remove "
+                    "Doublets* button."
+                )
+
+    def save_to_session_state(self):
+        st.session_state.doublet_detection = self.state
+
+    def run(self):
+        st.markdown("# Doublet Detection")
+        page_step_number = st.session_state.page_completion_order.index("doublet_detection")
+
+        # If the previous step has not been completed, display a message to the user and return
+        if st.session_state.furthest_step_number_completed < page_step_number - 1:
+            st.write("Please complete the previous step before running this step")
+            return
+
+        # Otherwise, run the page
+        self.display_sidebar()
+
+        # "Detect Doublets" button clicked
+        if self.state.detect_doublets_clicked:
+            self.run_detect_doublets()
+
+            # update with furthest step completed and reset downstream pages to show not complete
+            st.session_state.furthest_step_number_completed = page_step_number - 1
+            if "normalization" in st.session_state:
+                st.session_state.normalization.run_normalization_complete = False
+            if "feature_selection" in st.session_state:
+                st.session_state.feature_selection.feature_selection_complete = False
+            if "pca" in st.session_state:
+                st.session_state.pca.run_pca_complete = False
+            if "projection" in st.session_state:
+                st.session_state.projection.projection_complete = False
+            if "clustering" in st.session_state:
+                st.session_state.clustering.clustering_complete = False
+
+        # "Remove Doublets" button clicked
+        if self.state.remove_doublets_clicked:
+            self.remove_doublets(self.state.filtered_adata, algorithm=self.state.doublet_algorithm)
+            st.write("Doublets have been removed!")
+
+            # update with furthest step completed
+            st.session_state.furthest_step_number_completed = page_step_number
+
+        # Display doublet information
+        self.display_doublet_info()
+
+
+if "doublet_detection" in st.session_state:
+    page = Page(page_state=st.session_state.doublet_detection)
+else:
+    page = Page()
+page.run()

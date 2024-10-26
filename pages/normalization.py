@@ -50,7 +50,7 @@ class Page:
             # TODO: update doublets_removed_adata location when previous steps store this as
             # st.session_state.doublets.doublets_removed_adata
             self.state = NormalizationPageState(
-                doublets_removed_adata=st.session_state.doublets_removed_adata
+                doublets_removed_adata=st.session_state.doublet_detection.doublets_removed_adata
             )
 
     def display_sidebar(self):
