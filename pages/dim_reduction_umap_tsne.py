@@ -80,7 +80,12 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            self.state = ProjectionPageState(normalized_adata=st.session_state.pca.normalized_adata)
+            try:
+                self.state = ProjectionPageState(
+                    normalized_adata=st.session_state.pca.normalized_adata
+                )
+            except:
+                self.state = ProjectionPageState()
 
     def display_umap_options(self):
         self.state.user_sel_umap_min_dist = st.sidebar.number_input(

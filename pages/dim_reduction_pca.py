@@ -49,9 +49,12 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            self.state = PCAPageState(
-                normalized_adata=st.session_state.feature_selection.normalized_adata
-            )
+            try:
+                self.state = PCAPageState(
+                    normalized_adata=st.session_state.feature_selection.normalized_adata
+                )
+            except:
+                self.state = PCAPageState()
         self.run_pca_button_clicked = False
 
     def display_sidebar(self):

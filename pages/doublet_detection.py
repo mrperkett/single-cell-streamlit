@@ -50,9 +50,12 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            self.state = DoubletPageState(
-                filtered_adata=st.session_state.quality_control.filtered_adata
-            )
+            try:
+                self.state = DoubletPageState(
+                    filtered_adata=st.session_state.quality_control.filtered_adata
+                )
+            except:
+                self.state = DoubletPageState()
         self.detect_doublets_clicked = False
         self.remove_doublets_clicked = False
 
@@ -163,6 +166,11 @@ class Page:
                     "No doublets have been removed.  To remove doublets, click the *Remove "
                     "Doublets* button."
                 )
+        else:
+            st.markdown(
+                "Doublet detection has not been run.  Select the desired parameters on the"
+                " left and click *Detect Doublets* to continue."
+            )
 
     def save_to_session_state(self):
         st.session_state.doublet_detection = self.state

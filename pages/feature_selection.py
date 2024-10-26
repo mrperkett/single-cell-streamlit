@@ -34,9 +34,12 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            self.state = FeatureSelectionPageState(
-                normalized_adata=st.session_state.normalization.normalized_adata
-            )
+            try:
+                self.state = FeatureSelectionPageState(
+                    normalized_adata=st.session_state.normalization.normalized_adata
+                )
+            except:
+                self.state = FeatureSelectionPageState()
 
     def display_sidebar(self):
         # TODO: drop seurat_v3 support for now since it needs tweaking
@@ -70,7 +73,7 @@ class Page:
 
     def run(self):
         st.markdown("# Feature Selection")
-        page_step_number = st.session_state.page_completion_order.index("dim_reduction_umap_tsne")
+        page_step_number = st.session_state.page_completion_order.index("feature_selection")
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
@@ -94,7 +97,10 @@ class Page:
         if self.state.feature_selection_complete:
             display_highly_variable_genes_plot(self.state.normalized_adata)
         else:
-            st.write("Feature selection has not been run.")
+            st.write(
+                "Feature selection has not been run. Select the desired parameters on the"
+                " left and click *Run Feature Selection* to continue."
+            )
 
 
 if "feature_selection" in st.session_state:

@@ -17,15 +17,13 @@ def main():
         "quality_control",
         "doublet_detection",
         "normalization",
-        "feature selection",
+        "feature_selection",
         "dim_reduction_pca",
         "dim_reduction_umap_tsne",
         "clustering",
     ]
-    # TODO: set furthest_step_number_completed to -1 after all Pages have been updated to use this
-    #       for tracking
-    # st.session_state.furthest_step_number_completed = -1
-    st.session_state.furthest_step_number_completed = 7
+    if "furthest_step_number_completed" not in st.session_state:
+        st.session_state.furthest_step_number_completed = 0
     page = st.navigation(
         [
             st.Page(f"{dir_path}/pages/introduction.py", title="Introduction"),

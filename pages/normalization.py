@@ -47,11 +47,12 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            # TODO: update doublets_removed_adata location when previous steps store this as
-            # st.session_state.doublets.doublets_removed_adata
-            self.state = NormalizationPageState(
-                doublets_removed_adata=st.session_state.doublet_detection.doublets_removed_adata
-            )
+            try:
+                self.state = NormalizationPageState(
+                    doublets_removed_adata=st.session_state.doublet_detection.doublets_removed_adata
+                )
+            except:
+                self.state = NormalizationPageState()
 
     def display_sidebar(self):
         self.state.user_sel_exclude_highly_expressed = st.sidebar.checkbox(

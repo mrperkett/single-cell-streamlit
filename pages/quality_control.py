@@ -43,7 +43,10 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            self.state = QualityControlPageState(adata=st.session_state.load_data.adata)
+            try:
+                self.state = QualityControlPageState(adata=st.session_state.load_data.adata)
+            except:
+                self.state = QualityControlPageState()
 
     def run_filter(self):
         # Update state with current user selections

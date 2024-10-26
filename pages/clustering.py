@@ -64,10 +64,13 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            self.state = ClusteringPageState(
-                normalized_adata=st.session_state.projection.normalized_adata,
-                visualization_type=st.session_state.projection.visualization_type,
-            )
+            try:
+                self.state = ClusteringPageState(
+                    normalized_adata=st.session_state.projection.normalized_adata,
+                    visualization_type=st.session_state.projection.visualization_type,
+                )
+            except:
+                self.state = ClusteringPageState()
         self.run_clustering_clicked = False
 
     def display_leiden_options(self):
