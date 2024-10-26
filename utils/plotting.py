@@ -375,7 +375,7 @@ def display_clustering(adata, clustering_method, visualization_type):
         )
 
 
-def display_qc_info(adata, filtered_adata=None):
+def display_qc_info_comparison(adata, filtered_adata=None):
 
     # load adata stats
     df_general, df_umis_per_gene, df_umis_per_cell, df_genes_per_cell = get_qc_stats_dataframe(
@@ -451,3 +451,36 @@ def display_qc_info(adata, filtered_adata=None):
     with column2:
         if filtered_adata:
             display_mitochondrial_umi_distribution_plot(filtered_adata)
+
+
+def display_qc_info(adata):
+
+    # Display QC stats table
+    df_general, df_umis_per_gene, df_umis_per_cell, df_genes_per_cell = get_qc_stats_dataframe(
+        adata
+    )
+    st.dataframe(df_general, width=400)
+
+    # (UMI count / cell) vs (gene count / cell) colored by (% MT)
+    st.markdown("#")
+    display_umi_count_gene_count_scatterplot(adata)
+
+    # jointplot of (UMI count / cell) vs (gene count / cell)
+    st.markdown("#")
+    display_log_umi_count_log_gene_count_jointplot(adata)
+
+    # Distribution of UMI count / cell
+    st.markdown("#")
+    display_get_umi_distribution_plot(adata)
+
+    st.dataframe(df_umis_per_cell)
+
+    # Distribution of gene count / cell
+    st.markdown("#")
+    display_gene_distribution_plot(adata)
+
+    st.dataframe(df_genes_per_cell)
+
+    # Distribution of % MT UMIs
+    st.markdown("#")
+    display_mitochondrial_umi_distribution_plot(adata)

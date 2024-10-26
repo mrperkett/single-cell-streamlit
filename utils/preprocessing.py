@@ -10,7 +10,6 @@ def run_quality_control(adata):
 
     # run QC
     sc.pp.calculate_qc_metrics(adata, qc_vars=["mt", "ribo", "hb"], inplace=True, log1p=True)
-    st.session_state.quality_control_complete = True
 
 
 def detect_doublets(adata, session_state, algorithm="Scrublet"):

@@ -1,19 +1,35 @@
-import time
+import copy
+from dataclasses import dataclass
+from typing import Union
 
 import anndata as ad
 import scanpy as sc
 import streamlit as st
 import yaml
 
-from utils.plotting import (
-    display_gene_distribution_plot,
-    display_get_umi_distribution_plot,
-    display_log_umi_count_log_gene_count_jointplot,
-    display_mitochondrial_umi_distribution_plot,
-    display_umi_count_gene_count_scatterplot,
-)
+from utils.plotting import display_qc_info
 from utils.preprocessing import run_quality_control
-from utils.stats import get_qc_stats_dataframe
+
+
+@dataclass
+class LoadDataPageState:
+    # user selections when "Load" button was last clicked
+    dataset_name: Union[str, None] = None
+
+    # current user selections
+    user_sel_dataset_name: Union[str, None] = None
+
+    # parameters not selected by user
+    dataset_loaded: bool = False
+    quality_control_complete: bool = False
+    config: Union[str, None] = None
+    dataset: Union[dict, None] = None
+
+    def reset(self):
+        self.dataset_name = None
+
+    def update(self):
+        self.dataset_name = self.user_sel_dataset_name
 
 
 def load_config(config_file_path):
@@ -22,113 +38,114 @@ def load_config(config_file_path):
     return config
 
 
-def load_dataset(dataset, status_placeholder):
-    with status_placeholder.container():
-        with st.status("Loading data", expanded=True) as status:
+class Page:
+
+    def __init__(self, page_state=None):
+        if page_state:
+            self.state = copy.copy(page_state)
+        else:
+            self.state = LoadDataPageState()
+
+    def load_dataset(self):
+        # Update state with current user selections
+        self.state.reset()
+        self.state.update()
+        self.state.dataset = self.state.config["datasets"][self.state.dataset_name]
+
+        num_samples = len(self.state.dataset["samples"])
+        with st.status(f"Loading {num_samples} samples", expanded=True) as status:
             adatas = {}
-            # num_samples = len(dataset["samples"])
-            for n, (sample_id, sample_path) in enumerate(dataset["samples"].items()):
+            for sample_id, sample_path in self.state.dataset["samples"].items():
                 st.write(f"Loading sample {sample_id}")
                 sample_adata = sc.read_10x_h5(sample_path)
                 sample_adata.var_names_make_unique()
                 adatas[sample_id] = sample_adata
-                time.sleep(1)
 
             st.write("Concatenating samples")
             adata = ad.concat(adatas, label="sample")
             adata.obs_names_make_unique()
-            time.sleep(1)
-
-            st.session_state.adata = adata
-            st.session_state.dataset_loaded = True
-            st.session_state.quality_control_complete = False
-
         status.update(label="Load complete!", state="complete", expanded=False)
 
+        # save state to global st.session_state
+        self.state.adata = adata
+        self.state.dataset_loaded = True
+        self.state.quality_control_complete = False
+        self.save_to_session_state()
 
-def display_qc_info():
+    def display_sidebar(self):
+        dataset_names = list(self.state.config["datasets"].keys())
+        self.state.user_sel_dataset_name = st.sidebar.selectbox(
+            "Dataset",
+            options=dataset_names,
+            index=(dataset_names.index(self.state.dataset_name) if self.state.dataset_name else 0),
+            help="Select which dataset to load",
+        )
+        self.load_clicked = st.sidebar.button("Load")
 
-    # Display QC stats table
-    df_general, df_umis_per_gene, df_umis_per_cell, df_genes_per_cell = get_qc_stats_dataframe(
-        st.session_state.adata
-    )
-    st.dataframe(df_general, width=400)
+    def save_to_session_state(self):
+        st.session_state.load_data = self.state
 
-    # (UMI count / cell) vs (gene count / cell) colored by (% MT)
-    st.markdown("#")
-    display_umi_count_gene_count_scatterplot(st.session_state.adata)
+    def run(self):
+        st.markdown("# Load Data")
+        page_step_number = st.session_state.page_completion_order.index("load_data")
 
-    # jointplot of (UMI count / cell) vs (gene count / cell)
-    st.markdown("#")
-    display_log_umi_count_log_gene_count_jointplot(st.session_state.adata)
+        # If the previous step has not been completed, display a message to the user and return
+        if st.session_state.furthest_step_number_completed < page_step_number - 1:
+            st.write("Please complete the previous step before running this step")
+            return
 
-    # Distribution of UMI count / cell
-    st.markdown("#")
-    display_get_umi_distribution_plot(st.session_state.adata)
+        # Otherwise, run the page
+        self.state.config = load_config("config.yaml")
+        self.display_sidebar()
+        if self.load_clicked:
+            self.load_dataset()
 
-    st.dataframe(df_umis_per_cell)
+            # update with furthest step completed and reset downstream pages to show not complete
+            st.session_state.furthest_step_number_completed = page_step_number
+            if "quality_control" in st.session_state:
+                st.session_state.quality_control.quality_control_complete = False
+                st.session_state.quality_control.filtered_adata = None
+            if "doublet_detection" in st.session_state:
+                st.session_state.doublet_detection.doublet_detection_complete = False
+                st.session_state.doublet_detection.doublet_step_complete = False
+            if "normalization" in st.session_state:
+                st.session_state.normalization.run_normalization_complete = False
+            if "feature_selection" in st.session_state:
+                st.session_state.feature_selection.feature_selection_complete = False
+            if "pca" in st.session_state:
+                st.session_state.pca.run_pca_complete = False
+            if "projection" in st.session_state:
+                st.session_state.projection.projection_complete = False
+            if "clustering" in st.session_state:
+                st.session_state.clustering.clustering_complete = False
 
-    # Distribution of gene count / cell
-    st.markdown("#")
-    display_gene_distribution_plot(st.session_state.adata)
+        if self.state.dataset_loaded:
+            st.write(f"**Loaded data**: {self.state.dataset_name}")
+            description = f"*{self.state.dataset['description']}*"
+            st.markdown(f"{description}")
+            st.write("**Samples:**")
+            samples_markdown_text = "\n".join(
+                ["- " + sample for sample in self.state.dataset["samples"]]
+            )
+            st.markdown(samples_markdown_text)
 
-    st.dataframe(df_genes_per_cell)
+        st.markdown("## Quality Control Plots")
 
-    # NOTE: this runs really slow - exclude for now
-    # # Distribution of UMIs / gene
-    # st.markdown("#")
-    # fig = get_umis_per_gene_distribution_plot(adata)
-    # st.pyplot(fig)
-    # with st.expander("More Info", expanded=False, icon="💭"):
-    #     st.write("description")
+        # Run Quality Control if the dataset has been loaded and it hasn't already been run
+        if self.state.dataset_loaded and not self.state.quality_control_complete:
+            with st.spinner("Running QC..."):
+                run_quality_control(self.state.adata)
+                self.state.quality_control_complete = True
+                # save state to global st.session_state
+                self.save_to_session_state()
 
-    # st.dataframe(df_umis_per_gene)
-
-    # Distribution of % MT UMIs
-    st.markdown("#")
-    display_mitochondrial_umi_distribution_plot(st.session_state.adata)
-
-
-def run():
-    if "dataset_loaded" not in st.session_state:
-        st.session_state.dataset_loaded = False
-    if "quality_control_complete" not in st.session_state:
-        st.session_state.quality_control_complete = False
-
-    st.markdown("# Load Data")
-
-    config = load_config("config.yaml")
-
-    st.markdown("## Select Dataset")
-    dataset_names = config["datasets"].keys()
-    dataset_name = st.selectbox("Dataset", options=dataset_names)
-    dataset = config["datasets"][dataset_name]
-
-    description = f"*{dataset['description']}*"
-    st.markdown(f"{description}")
-
-    # Run data loading on button click
-    load_button_clicked = st.button("Load")
-    status_placeholder = st.empty()
-    if load_button_clicked:
-        st.session_state.dataset_name = dataset_name
-        st.session_state.dataset = dataset
-        load_dataset(dataset, status_placeholder)
-
-    if st.session_state.dataset_loaded:
-        st.write(f"Dataset '{st.session_state.dataset_name}' is loaded.")
-
-    st.markdown("## Quality Control")
-
-    # Run Quality Control if the dataset has been loaded and it hasn't already been run
-    if st.session_state.dataset_loaded and not st.session_state.quality_control_complete:
-        with st.spinner("Running QC..."):
-            time.sleep(1)
-            run_quality_control(st.session_state.adata)
-
-    # Display Quality Control information after it has been run
-    if st.session_state.quality_control_complete:
-        display_qc_info()
+        # Display Quality Control information after it has been run
+        if self.state.quality_control_complete:
+            display_qc_info(self.state.adata)
 
 
-run()
+if "load_data" in st.session_state:
+    page = Page(page_state=st.session_state.load_data)
+else:
+    page = Page()
+page.run()

@@ -6,7 +6,7 @@ import streamlit as st
 from anndata import AnnData
 
 from utils.analysis import filter_adata
-from utils.plotting import display_qc_info
+from utils.plotting import display_qc_info_comparison
 
 
 @dataclass
@@ -43,8 +43,7 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            # TODO: update after Load Data step has been refactored
-            self.state = QualityControlPageState(adata=st.session_state.adata)
+            self.state = QualityControlPageState(adata=st.session_state.load_data.adata)
 
     def run_filter(self):
         # Update state with current user selections
@@ -134,7 +133,7 @@ class Page:
                 st.session_state.projection.projection_complete = False
             if "clustering" in st.session_state:
                 st.session_state.clustering.clustering_complete = False
-        display_qc_info(self.state.adata, self.state.filtered_adata)
+        display_qc_info_comparison(self.state.adata, self.state.filtered_adata)
 
 
 if "quality_control" in st.session_state:
