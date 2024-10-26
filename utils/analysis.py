@@ -1,3 +1,4 @@
+import numpy as np
 import scanpy as sc
 
 
@@ -95,3 +96,31 @@ def run_dimensional_reduction_projection(adata, page_state):
         )
     else:
         raise ValueError(f"visualization_type '{page_state.visualization_type}' not recognized")
+
+
+def filter_adata(
+    adata,
+    min_allowed_genes_in_cell,
+    min_allowed_cells_with_gene,
+    max_allowed_percent_mt,
+):
+    # adata.obs["n_genes_by_counts"] gives total number of genes identified for each cell (i.e.
+    # count all genes with >= 1 UMI)
+    passes_min_allowed_genes_in_cell = adata.obs["n_genes_by_counts"] >= min_allowed_genes_in_cell
+
+    passes_max_allowed_percent_mt = adata.obs["pct_counts_mt"] <= max_allowed_percent_mt
+
+    # add barcode filters
+    adata.obs["passes_filters"] = passes_min_allowed_genes_in_cell & passes_max_allowed_percent_mt
+
+    # add feature filters
+    # number of barcodes (i.e. cells) for each gene
+    total_barcodes_by_gene = np.array((adata.X > 0).sum(axis=0)).flatten()
+    adata.var["passes_filters"] = total_barcodes_by_gene >= min_allowed_cells_with_gene
+
+    # create filtered_adata
+    # filtered_adata = adata[adata.obs["passes_filters"]].copy()
+    # filtered_adata = adata[:, adata.var["passes_filters"]].copy()
+    filtered_adata = adata[adata.obs["passes_filters"], adata.var["passes_filters"]].copy()
+
+    return filtered_adata

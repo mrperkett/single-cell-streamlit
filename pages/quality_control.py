@@ -1,175 +1,144 @@
-import numpy as np
+import copy
+from dataclasses import dataclass
+from typing import Union
+
 import streamlit as st
+from anndata import AnnData
 
-from utils.plotting import (
-    display_gene_distribution_plot,
-    display_get_umi_distribution_plot,
-    display_log_umi_count_log_gene_count_jointplot,
-    display_mitochondrial_umi_distribution_plot,
-    display_umi_count_gene_count_scatterplot,
-)
-from utils.stats import get_qc_stats_dataframe
+from utils.analysis import filter_adata
+from utils.plotting import display_qc_info
 
 
-def filter_adata(
-    adata,
-    min_allowed_genes_in_cell,
-    min_allowed_cells_with_gene,
-    max_allowed_percent_mt,
-):
-    # adata.obs["n_genes_by_counts"] gives total number of genes identified for each cell (i.e.
-    # count all genes with >= 1 UMI)
-    passes_min_allowed_genes_in_cell = adata.obs["n_genes_by_counts"] >= min_allowed_genes_in_cell
+@dataclass
+class QualityControlPageState:
+    # user selections when "Run Dimensional Reduction" button was last clicked
+    min_allowed_genes_in_cell: Union[int, None] = None
+    min_allowed_cells_with_gene: Union[int, None] = None
+    max_allowed_percent_mt: Union[float, None] = None
 
-    passes_max_allowed_percent_mt = adata.obs["pct_counts_mt"] <= max_allowed_percent_mt
+    # current user selections
+    user_sel_min_allowed_genes_in_cell: Union[int, None] = None
+    user_sel_min_allowed_cells_with_gene: Union[int, None] = None
+    user_sel_max_allowed_percent_mt: Union[float, None] = None
 
-    # add barcode filters
-    adata.obs["passes_filters"] = passes_min_allowed_genes_in_cell & passes_max_allowed_percent_mt
+    # parameters not selected by user
+    adata: Union[AnnData, None] = None
+    filtered_adata: Union[AnnData, None] = None
+    quality_control_complete: bool = False
 
-    # add feature filters
-    # number of barcodes (i.e. cells) for each gene
-    total_barcodes_by_gene = np.array((adata.X > 0).sum(axis=0)).flatten()
-    adata.var["passes_filters"] = total_barcodes_by_gene >= min_allowed_cells_with_gene
+    def reset(self):
+        self.min_allowed_genes_in_cell = None
+        self.min_allowed_cells_with_gene = None
+        self.max_allowed_percent_mt = None
 
-    # create filtered_adata
-    # filtered_adata = adata[adata.obs["passes_filters"]].copy()
-    # filtered_adata = adata[:, adata.var["passes_filters"]].copy()
-    filtered_adata = adata[adata.obs["passes_filters"], adata.var["passes_filters"]].copy()
-
-    return filtered_adata
-
-
-def define_sidebar_filtering_widgets():
-    st.session_state.min_allowed_genes_in_cell = st.sidebar.number_input(
-        "Min allowed genes in a cell",
-        min_value=1,
-        value="min",
-        step=1,
-        help="Cells that have less than this number of genes will be removed",
-    )
-
-    st.session_state.min_allowed_cells_with_gene = st.sidebar.number_input(
-        "Min allowed cells with gene",
-        min_value=1,
-        value="min",
-        step=1,
-        help="Genes that are identified in less than this number of cells will be removed",
-    )
-
-    st.session_state.max_allowed_percent_mt = st.sidebar.slider(
-        "Max allowed % Mitochondrial",
-        min_value=0.0,
-        max_value=100.0,
-        value=100.0,
-        step=1.0,
-        help="Cells where the percent Mitochondrial UMIs is greater than this number will be removed",
-    )
-
-    st.session_state.apply_filters_button_clicked = st.sidebar.button(
-        "Apply Filters",
-        help="Apply quality control filters to data",
-    )
+    def update(self):
+        self.min_allowed_genes_in_cell = self.user_sel_min_allowed_genes_in_cell
+        self.min_allowed_cells_with_gene = self.user_sel_min_allowed_cells_with_gene
+        self.max_allowed_percent_mt = self.user_sel_max_allowed_percent_mt
 
 
-def run():
-    st.markdown("# Quality Control")
+class Page:
 
-    # Define sidebar filtering selections
-    define_sidebar_filtering_widgets()
+    def __init__(self, page_state=None):
+        if page_state:
+            self.state = copy.copy(page_state)
+        else:
+            # TODO: update after Load Data step has been refactored
+            self.state = QualityControlPageState(adata=st.session_state.adata)
 
-    if "adata" not in st.session_state:
-        st.markdown("**No data has been loaded.  Please run Load Data.**")
-        return
+    def run_filter(self):
+        # Update state with current user selections
+        self.state.reset()
+        self.state.update()
 
-    if "filtered_adata" not in st.session_state:
-        st.session_state.filtered_adata = None
-
-    # "Apply Filters" button clicked
-    if st.session_state.apply_filters_button_clicked:
-        # filter adata based on user selections
-        st.session_state.filtered_adata = filter_adata(
-            st.session_state.adata,
-            st.session_state.min_allowed_genes_in_cell,
-            st.session_state.min_allowed_cells_with_gene,
-            st.session_state.max_allowed_percent_mt,
+        self.state.filtered_adata = filter_adata(
+            self.state.adata,
+            self.state.min_allowed_genes_in_cell,
+            self.state.min_allowed_cells_with_gene,
+            self.state.max_allowed_percent_mt,
         )
 
-    # load adata stats
-    df_general, df_umis_per_gene, df_umis_per_cell, df_genes_per_cell = get_qc_stats_dataframe(
-        st.session_state.adata
-    )
+        # save state to global st.session_state
+        self.state.quality_control_complete = True
+        self.save_to_session_state()
 
-    # load filtered_adata stats
-    if st.session_state.filtered_adata:
-        (
-            df_general_filtered,
-            df_umis_per_gene_filtered,
-            df_umis_per_cell_filtered,
-            df_genes_per_cell_filtered,
-        ) = get_qc_stats_dataframe(st.session_state.filtered_adata)
+    def display_sidebar(self):
+        self.state.user_sel_min_allowed_genes_in_cell = st.sidebar.number_input(
+            "Min allowed genes in a cell",
+            min_value=1,
+            value=(
+                self.state.min_allowed_genes_in_cell
+                if self.state.min_allowed_genes_in_cell
+                else "min"
+            ),
+            step=1,
+            help="Cells that have less than this number of genes will be removed",
+        )
 
-    # define two columns for output
+        self.state.user_sel_min_allowed_cells_with_gene = st.sidebar.number_input(
+            "Min allowed cells with gene",
+            min_value=1,
+            value=(
+                self.state.min_allowed_cells_with_gene
+                if self.state.min_allowed_cells_with_gene
+                else "min"
+            ),
+            step=1,
+            help="Genes that are identified in less than this number of cells will be removed",
+        )
 
-    # Display QC stats table
-    column1, column2 = st.columns(2)
-    with column1:
-        st.markdown("## Original")
-        st.dataframe(df_general, width=300)
-    with column2:
-        st.markdown("## Filtered")
-        if st.session_state.filtered_adata:
-            st.dataframe(df_general_filtered, width=300)
-        else:
-            st.markdown("Click *Apply Filters* to see filtered plots")
+        self.state.user_sel_max_allowed_percent_mt = st.sidebar.slider(
+            "Max allowed % Mitochondrial",
+            min_value=0.0,
+            max_value=100.0,
+            value=self.state.max_allowed_percent_mt if self.state.max_allowed_percent_mt else 100.0,
+            step=1.0,
+            help="Cells where the percent Mitochondrial UMIs is greater than this number will be"
+            "removed",
+        )
 
-    # (UMI count / cell) vs (gene count / cell) colored by (% MT)
-    st.markdown("")
-    column1, column2 = st.columns(2)
-    with column1:
-        display_umi_count_gene_count_scatterplot(st.session_state.adata)
-    with column2:
-        if st.session_state.filtered_adata:
-            display_umi_count_gene_count_scatterplot(st.session_state.filtered_adata)
+        self.apply_filters_button_clicked = st.sidebar.button(
+            "Apply Filters",
+            help="Apply quality control filters to data",
+        )
 
-    # jointplot of (UMI count / cell) vs (gene count / cell)
-    st.markdown("")
-    column1, column2 = st.columns(2)
-    with column1:
-        display_log_umi_count_log_gene_count_jointplot(st.session_state.adata)
-    with column2:
-        if st.session_state.filtered_adata:
-            display_log_umi_count_log_gene_count_jointplot(st.session_state.filtered_adata)
+    def save_to_session_state(self):
+        st.session_state.quality_control = self.state
 
-    # Distribution of UMI count / cell
-    st.markdown("#")
-    column1, column2 = st.columns(2)
-    with column1:
-        display_get_umi_distribution_plot(st.session_state.adata)
-        st.dataframe(df_umis_per_cell)
-    with column2:
-        if st.session_state.filtered_adata:
-            display_get_umi_distribution_plot(st.session_state.filtered_adata)
-            st.dataframe(df_umis_per_cell_filtered)
+    def run(self):
+        st.markdown("# Quality Control")
+        page_step_number = st.session_state.page_completion_order.index("quality_control")
 
-    # Distribution of gene count / cell
-    st.markdown("#")
-    column1, column2 = st.columns(2)
-    with column1:
-        display_gene_distribution_plot(st.session_state.adata)
-        st.dataframe(df_genes_per_cell)
-    with column2:
-        if st.session_state.filtered_adata:
-            display_gene_distribution_plot(st.session_state.filtered_adata)
-            st.dataframe(df_genes_per_cell_filtered)
+        # If the previous step has not been completed, display a message to the user and return
+        if st.session_state.furthest_step_number_completed < page_step_number - 1:
+            st.write("Please complete the previous step before running this step")
+            return
 
-    # Distribution of % MT UMIs
-    st.markdown("#")
-    column1, column2 = st.columns(2)
-    with column1:
-        display_mitochondrial_umi_distribution_plot(st.session_state.adata)
-    with column2:
-        if st.session_state.filtered_adata:
-            display_mitochondrial_umi_distribution_plot(st.session_state.filtered_adata)
+        # Otherwise, run the page
+        self.display_sidebar()
+        if self.apply_filters_button_clicked:
+            self.run_filter()
+
+            # update with furthest step completed and reset downstream pages to show not complete
+            st.session_state.furthest_step_number_completed = page_step_number
+            if "doublet_detection" in st.session_state:
+                st.session_state.doublet_detection.doublet_detection_complete = False
+                st.session_state.doublet_detection.doublet_step_complete = False
+            if "normalization" in st.session_state:
+                st.session_state.normalization.run_normalization_complete = False
+            if "feature_selection" in st.session_state:
+                st.session_state.feature_selection.feature_selection_complete = False
+            if "pca" in st.session_state:
+                st.session_state.pca.run_pca_complete = False
+            if "projection" in st.session_state:
+                st.session_state.projection.projection_complete = False
+            if "clustering" in st.session_state:
+                st.session_state.clustering.clustering_complete = False
+        display_qc_info(self.state.adata, self.state.filtered_adata)
 
 
-run()
+if "quality_control" in st.session_state:
+    page = Page(page_state=st.session_state.quality_control)
+else:
+    page = Page()
+page.run()

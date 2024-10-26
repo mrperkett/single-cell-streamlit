@@ -5,6 +5,8 @@ import scanpy as sc
 import seaborn as sns
 import streamlit as st
 
+from utils.stats import get_qc_stats_dataframe
+
 
 def get_umi_count_gene_count_scatterplot(adata):
     fig, ax = plt.subplots()
@@ -371,3 +373,81 @@ def display_clustering(adata, clustering_method, visualization_type):
             f" between points should be interpreted with caution. See the caveats mentioned"
             f" in the previous step."
         )
+
+
+def display_qc_info(adata, filtered_adata=None):
+
+    # load adata stats
+    df_general, df_umis_per_gene, df_umis_per_cell, df_genes_per_cell = get_qc_stats_dataframe(
+        adata
+    )
+
+    # load filtered_adata stats
+    if filtered_adata:
+        (
+            df_general_filtered,
+            df_umis_per_gene_filtered,
+            df_umis_per_cell_filtered,
+            df_genes_per_cell_filtered,
+        ) = get_qc_stats_dataframe(filtered_adata)
+
+    # Display QC stats table
+    column1, column2 = st.columns(2)
+    with column1:
+        st.markdown("## Original")
+        st.dataframe(df_general, width=300)
+    with column2:
+        st.markdown("## Filtered")
+        if filtered_adata:
+            st.dataframe(df_general_filtered, width=300)
+        else:
+            st.markdown("Click *Apply Filters* to see filtered plots")
+
+    # (UMI count / cell) vs (gene count / cell) colored by (% MT)
+    st.markdown("")
+    column1, column2 = st.columns(2)
+    with column1:
+        display_umi_count_gene_count_scatterplot(adata)
+    with column2:
+        if filtered_adata:
+            display_umi_count_gene_count_scatterplot(filtered_adata)
+
+    # jointplot of (UMI count / cell) vs (gene count / cell)
+    st.markdown("")
+    column1, column2 = st.columns(2)
+    with column1:
+        display_log_umi_count_log_gene_count_jointplot(adata)
+    with column2:
+        if filtered_adata:
+            display_log_umi_count_log_gene_count_jointplot(filtered_adata)
+
+    # Distribution of UMI count / cell
+    st.markdown("#")
+    column1, column2 = st.columns(2)
+    with column1:
+        display_get_umi_distribution_plot(adata)
+        st.dataframe(df_umis_per_cell)
+    with column2:
+        if filtered_adata:
+            display_get_umi_distribution_plot(filtered_adata)
+            st.dataframe(df_umis_per_cell_filtered)
+
+    # Distribution of gene count / cell
+    st.markdown("#")
+    column1, column2 = st.columns(2)
+    with column1:
+        display_gene_distribution_plot(adata)
+        st.dataframe(df_genes_per_cell)
+    with column2:
+        if filtered_adata:
+            display_gene_distribution_plot(filtered_adata)
+            st.dataframe(df_genes_per_cell_filtered)
+
+    # Distribution of % MT UMIs
+    st.markdown("#")
+    column1, column2 = st.columns(2)
+    with column1:
+        display_mitochondrial_umi_distribution_plot(adata)
+    with column2:
+        if filtered_adata:
+            display_mitochondrial_umi_distribution_plot(filtered_adata)

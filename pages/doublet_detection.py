@@ -25,7 +25,7 @@ class DoubletPageState:
 
     # parameters not selected by user
     filtered_adata: Union[AnnData, None] = None
-    doublets_detection_complete: bool = False
+    doublet_detection_complete: bool = False
     doublet_step_complete: bool = False
 
     def reset(self):
@@ -50,8 +50,11 @@ class Page:
         if page_state:
             self.state = copy.copy(page_state)
         else:
-            # TODO: update filtered_adata after Quality Control step is refactored
-            self.state = DoubletPageState(filtered_adata=st.session_state.filtered_adata)
+            self.state = DoubletPageState(
+                filtered_adata=st.session_state.quality_control.filtered_adata
+            )
+        self.detect_doublets_clicked = False
+        self.remove_doublets_clicked = False
 
     def display_algorithm_advanced_options(self, algorithm):
         if algorithm == "Scrublet":
@@ -101,16 +104,16 @@ class Page:
         self.display_algorithm_advanced_options(self.state.user_sel_doublet_algorithm)
 
         # Detect Doublets button
-        self.state.detect_doublets_clicked = st.sidebar.button(
+        self.detect_doublets_clicked = st.sidebar.button(
             "Detect Doublets",
             help="Run detect doublets",
         )
 
         # Remove Doublets button
-        self.state.remove_doublets_clicked = st.sidebar.button(
+        self.remove_doublets_clicked = st.sidebar.button(
             "Remove Doublets",
             help="Remove detected doublets",
-            disabled=not self.state.doublets_detection_complete,
+            disabled=not self.state.doublet_detection_complete,
         )
 
     def remove_doublets(self, adata, algorithm="Scrublet"):
@@ -138,12 +141,12 @@ class Page:
             )
 
         # save state to global st.session_state
-        self.state.doublets_detection_complete = True
+        self.state.doublet_detection_complete = True
         self.state.doublet_step_complete = False
         self.save_to_session_state()
 
     def display_doublet_info(self):
-        if self.state.doublets_detection_complete:
+        if self.state.doublet_detection_complete:
             st.markdown("## Before doublet removal")
             display_doublet_detection_info(
                 self.state.filtered_adata, algorithm=self.state.doublet_algorithm
@@ -177,7 +180,7 @@ class Page:
         self.display_sidebar()
 
         # "Detect Doublets" button clicked
-        if self.state.detect_doublets_clicked:
+        if self.detect_doublets_clicked:
             self.run_detect_doublets()
 
             # update with furthest step completed and reset downstream pages to show not complete
@@ -193,13 +196,19 @@ class Page:
             if "clustering" in st.session_state:
                 st.session_state.clustering.clustering_complete = False
 
+            # this allows the page to properly enable the "Remove Doublets" button
+            st.rerun()
+
         # "Remove Doublets" button clicked
-        if self.state.remove_doublets_clicked:
+        if self.remove_doublets_clicked:
             self.remove_doublets(self.state.filtered_adata, algorithm=self.state.doublet_algorithm)
             st.write("Doublets have been removed!")
 
             # update with furthest step completed
             st.session_state.furthest_step_number_completed = page_step_number
+
+        # displaying the sidebar comes after button click handling so that it properly enables the
+        # the "Remove Doublets" button after "Detect Doublets" has been run
 
         # Display doublet information
         self.display_doublet_info()
