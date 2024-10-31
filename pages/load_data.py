@@ -9,6 +9,7 @@ import yaml
 
 from utils.plotting import display_qc_info
 from utils.preprocessing import run_quality_control
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -102,22 +103,7 @@ class Page:
 
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            if "quality_control" in st.session_state:
-                st.session_state.quality_control.quality_control_complete = False
-                st.session_state.quality_control.filtered_adata = None
-            if "doublet_detection" in st.session_state:
-                st.session_state.doublet_detection.doublet_detection_complete = False
-                st.session_state.doublet_detection.doublet_step_complete = False
-            if "normalization" in st.session_state:
-                st.session_state.normalization.run_normalization_complete = False
-            if "feature_selection" in st.session_state:
-                st.session_state.feature_selection.feature_selection_complete = False
-            if "pca" in st.session_state:
-                st.session_state.pca.run_pca_complete = False
-            if "projection" in st.session_state:
-                st.session_state.projection.projection_complete = False
-            if "clustering" in st.session_state:
-                st.session_state.clustering.clustering_complete = False
+            set_downstream_pages_to_not_complete("load_data")
 
         if self.state.dataset_loaded:
             st.write(f"**Loaded data**: {self.state.dataset_name}")

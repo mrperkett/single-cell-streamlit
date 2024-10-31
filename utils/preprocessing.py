@@ -1,5 +1,4 @@
 import scanpy as sc
-import streamlit as st
 
 
 def run_quality_control(adata):

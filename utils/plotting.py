@@ -34,7 +34,8 @@ def get_umi_count_gene_count_scatterplot(adata):
 
 
 def get_log_umi_count_log_gene_count_jointplot(adata):
-    # inspired by: https://scanpy.readthedocs.io/en/1.10.x/generated/scanpy.pp.calculate_qc_metrics.html#scanpy.pp.calculate_qc_metrics
+    # inspired by: https://scanpy.readthedocs.io/en/1.10.x/generated/scanpy.pp.calculate_qc_metrics
+    # .html#scanpy.pp.calculate_qc_metrics
     fig, ax = plt.subplots()
     sns.jointplot(
         data=adata.obs,
@@ -315,7 +316,14 @@ def display_umap_results(adata):
     st.pyplot(fig)
     with st.expander("More Info", expanded=False, icon="💭"):
         st.markdown(
-            "This plot provides a visualization of the entire dataset where each point corresponds to a barcode (i.e. a cell in most cases) and the colors correspond to the sample.  Barcodes that have similar expression profiles are near each other and barcodes that have different expression profiles appear far apart.  The exact shape can be tuned using the parameters to the left.  The algorithm is stochastic and so if you run with a different *random state*, you will get different results. This projection is based on the [McInnes et al., 2018](https://umap-learn.readthedocs.io/en/latest/) publication."
+            "This plot provides a visualization of the entire dataset where each point corresponds"
+            " to a barcode (i.e. a cell in most cases) and the colors correspond to the sample."
+            " Barcodes that have similar expression profiles are near each other and barcodes that"
+            " have different expression profiles appear far apart.  The exact shape can be tuned"
+            " using the parameters to the left.  The algorithm is stochastic and so if you run"
+            " with a different *random state*, you will get different results. This projection is"
+            " based on the [McInnes et al., 2018](https://umap-learn.readthedocs.io/en/latest/)"
+            " publication."
         )
 
 

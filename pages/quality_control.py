@@ -7,6 +7,7 @@ from anndata import AnnData
 
 from utils.analysis import filter_adata
 from utils.plotting import display_qc_info_comparison
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -45,7 +46,7 @@ class Page:
         else:
             try:
                 self.state = QualityControlPageState(adata=st.session_state.load_data.adata)
-            except:
+            except Exception:
                 self.state = QualityControlPageState()
 
     def run_filter(self):
@@ -123,19 +124,7 @@ class Page:
 
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            if "doublet_detection" in st.session_state:
-                st.session_state.doublet_detection.doublet_detection_complete = False
-                st.session_state.doublet_detection.doublet_step_complete = False
-            if "normalization" in st.session_state:
-                st.session_state.normalization.run_normalization_complete = False
-            if "feature_selection" in st.session_state:
-                st.session_state.feature_selection.feature_selection_complete = False
-            if "pca" in st.session_state:
-                st.session_state.pca.run_pca_complete = False
-            if "projection" in st.session_state:
-                st.session_state.projection.projection_complete = False
-            if "clustering" in st.session_state:
-                st.session_state.clustering.clustering_complete = False
+            set_downstream_pages_to_not_complete("quality_control")
         display_qc_info_comparison(self.state.adata, self.state.filtered_adata)
 
 

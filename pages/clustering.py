@@ -7,6 +7,7 @@ from anndata import AnnData
 
 from utils.analysis import run_clustering
 from utils.plotting import display_clustering
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -69,7 +70,7 @@ class Page:
                     normalized_adata=st.session_state.projection.normalized_adata,
                     visualization_type=st.session_state.projection.visualization_type,
                 )
-            except:
+            except Exception:
                 self.state = ClusteringPageState()
         self.run_clustering_clicked = False
 
@@ -163,8 +164,8 @@ class Page:
             )
         else:
             st.write(
-                "Clustering has not been run.  Select the desired parameters on the left and click Run"
-                " Clustering."
+                "Clustering has not been run.  Select the desired parameters on the left and click"
+                " *Run Clustering*."
             )
 
     def run(self):
@@ -181,6 +182,7 @@ class Page:
         if self.run_clustering_clicked:
             self.run_clustering()
             st.session_state.furthest_step_number_completed = page_step_number
+            set_downstream_pages_to_not_complete("clustering")
         self.display_clustering()
 
 

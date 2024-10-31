@@ -7,6 +7,7 @@ from anndata import AnnData
 
 from utils.analysis import run_dimensional_reduction_projection
 from utils.plotting import display_tsne_results, display_umap_results
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -84,7 +85,7 @@ class Page:
                 self.state = ProjectionPageState(
                     normalized_adata=st.session_state.pca.normalized_adata
                 )
-            except:
+            except Exception:
                 self.state = ProjectionPageState()
 
     def display_umap_options(self):
@@ -234,8 +235,7 @@ class Page:
             self.run_dimensional_reduction_projection()
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            if "clustering" in st.session_state:
-                st.session_state.clustering.clustering_complete = False
+            set_downstream_pages_to_not_complete("dim_reduction_umap_tsne")
         self.display_projection()
 
 

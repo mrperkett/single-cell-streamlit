@@ -7,6 +7,7 @@ from anndata import AnnData
 
 from utils.plotting import display_doublet_detection_info
 from utils.preprocessing import detect_doublets
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -54,7 +55,7 @@ class Page:
                 self.state = DoubletPageState(
                     filtered_adata=st.session_state.quality_control.filtered_adata
                 )
-            except:
+            except Exception:
                 self.state = DoubletPageState()
         self.detect_doublets_clicked = False
         self.remove_doublets_clicked = False
@@ -193,16 +194,7 @@ class Page:
 
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number - 1
-            if "normalization" in st.session_state:
-                st.session_state.normalization.run_normalization_complete = False
-            if "feature_selection" in st.session_state:
-                st.session_state.feature_selection.feature_selection_complete = False
-            if "pca" in st.session_state:
-                st.session_state.pca.run_pca_complete = False
-            if "projection" in st.session_state:
-                st.session_state.projection.projection_complete = False
-            if "clustering" in st.session_state:
-                st.session_state.clustering.clustering_complete = False
+            set_downstream_pages_to_not_complete("doublet_detection")
 
             # this allows the page to properly enable the "Remove Doublets" button
             st.rerun()

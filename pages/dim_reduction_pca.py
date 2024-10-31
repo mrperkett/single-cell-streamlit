@@ -13,6 +13,7 @@ from utils.plotting import (
     display_ranked_pca_importance,
     display_top_principal_component_genes,
 )
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -53,7 +54,7 @@ class Page:
                 self.state = PCAPageState(
                     normalized_adata=st.session_state.feature_selection.normalized_adata
                 )
-            except:
+            except Exception:
                 self.state = PCAPageState()
         self.run_pca_button_clicked = False
 
@@ -142,10 +143,7 @@ class Page:
 
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            if "projection" in st.session_state:
-                st.session_state.projection.projection_complete = False
-            if "clustering" in st.session_state:
-                st.session_state.clustering.clustering_complete = False
+            set_downstream_pages_to_not_complete("dim_reduction_pca")
 
         self.display_pca_results()
 

@@ -7,6 +7,7 @@ from anndata import AnnData
 
 from utils.analysis import mark_highly_variable_genes
 from utils.plotting import display_highly_variable_genes_plot
+from utils.utils import set_downstream_pages_to_not_complete
 
 
 @dataclass
@@ -38,7 +39,7 @@ class Page:
                 self.state = FeatureSelectionPageState(
                     normalized_adata=st.session_state.normalization.normalized_adata
                 )
-            except:
+            except Exception:
                 self.state = FeatureSelectionPageState()
 
     def display_sidebar(self):
@@ -87,12 +88,7 @@ class Page:
             self.run_feature_selection()
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            if "pca" in st.session_state:
-                st.session_state.pca.run_pca_complete = False
-            if "projection" in st.session_state:
-                st.session_state.projection.projection_complete = False
-            if "clustering" in st.session_state:
-                st.session_state.clustering.clustering_complete = False
+            set_downstream_pages_to_not_complete("feature_selection")
 
         if self.state.feature_selection_complete:
             display_highly_variable_genes_plot(self.state.normalized_adata)
