@@ -145,8 +145,13 @@ class Page:
             )
 
     def run(self):
+        text = """# Normalization
 
-        st.markdown("# Normalization")
+The Normalization step transforms the data to remove variable sample effects.
+
+This is important to do since the data may vary purely due to various in the experimental procedure (e.g. transcript capture, reverse transcription, sequencing, etc).  This step first scales the total number of UMIs for a cell to a user-specified value (default = median) and then carries out a *log(count+1)* transformation.
+"""
+        st.markdown(text)
         page_step_number = st.session_state.page_completion_order.index("normalization")
 
         # If the previous step has not been completed, display a message to the user and return

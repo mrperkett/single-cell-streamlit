@@ -177,7 +177,13 @@ class Page:
         st.session_state.doublet_detection = self.state
 
     def run(self):
-        st.markdown("# Doublet Detection")
+        text = """# Doublet Detection
+
+The Doublet Detection step identifies likely doublets and removes them from downstream analysis.
+
+Doublets are two cells that were captured in the same GEM and were sequenced using the same cellular barcode.  Uncorrected, the presence of doublets in the dataset can be problematic in downstream steps.  For example, two cells with different expression profiles that are combined under the same cellular barcode may incorrectly appear as a unique subpopulation of cells or as part of a transition state. 
+"""
+        st.markdown(text)
         page_step_number = st.session_state.page_completion_order.index("doublet_detection")
 
         # If the previous step has not been completed, display a message to the user and return

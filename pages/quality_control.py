@@ -109,7 +109,19 @@ class Page:
         st.session_state.quality_control = self.state
 
     def run(self):
-        st.markdown("# Quality Control")
+        text = """# Quality Control
+
+The Quality Control step filters out undesirable data based on user-defined thresholds.  This includes
+
+- barcodes that have fewer than *min allowed genes in a cell*
+- barcodes with more than *max allowed % mitochondrial* mitochondrial UMIs (i.e. unique identified transcripts)
+- genes that occur in fewer than *min allowed cells with gene* barcodes
+        
+Each of these cutoffs is meant to filter out low-quality cells from the dataset.  Low-quality barcodes may result from dying cells, which have ruptured membranes and have released cytoplasmic mRNA leaving only mitochondrial mRNA.
+
+Care should be taken when defining cutoffs since it can be difficult to distinguish between outliers due to meaningful biological differences and a systematic error in the experiment.  It is generally recommended to be as permissive as possible to avoid filtering out outlier cell sub-populations.
+"""
+        st.markdown(text)
         page_step_number = st.session_state.page_completion_order.index("quality_control")
 
         # If the previous step has not been completed, display a message to the user and return
