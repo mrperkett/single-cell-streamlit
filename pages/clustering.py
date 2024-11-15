@@ -171,7 +171,7 @@ class Page:
     def run(self):
         text = """# Clustering
 
-The clustering step is used to identify groups of cells that have similar expression profiles.  Clusters can be used to annotate cell states, types, and cell cycle stages, which is often important in interpretting the dataset.
+The clustering step is used to identify groups of cells that have similar expression profiles.  Clusters can be used to annotate cell states, types, and cell cycle stages, which is often important in interpreting the dataset.
 
 The goal of clustering is typically to minimize the intra-cluster distance and maximize the inter-cluster distance. KNN (K-Nearest Neighbor) graphs are well-suited to this task for single cell data. They work by building a graph where each point (i.e. cell) is connected to its k (typically 5-100) nearest neighbors. Densely-connected regions of the graph are then detected using community detection algorithms such as the Louvain and Leiden algorithms.  The Leiden algorithm is now the recommended algorithm for this task since a defect in the Louvain algorithm has been found that can lead to "arbitrarily badly connected communities".
 

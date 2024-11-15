@@ -225,7 +225,7 @@ class Page:
 
 This step creates a 2-dimensional projection of the dataset where each point represents a cell and the spacing between points reflects the similarity/dissimilarity of the expression profiles between cells.  Points that are close to each other have similar expression profiles.  This technique is used to visualize the full dataset and aids in data exploration.
 
-The two most common projection algorithms are t-SNE (t-distributed Stochastic Neighbor Embedding) and UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction). How you interpret the project depends on the details of the algorithm.  For example, t-SNE does not necessarily place points that are very different far apartment and so the distance between clusters is usually meaningless.  UMAP, on the other hand, does this more strictly.
+The two most common projection algorithms are t-SNE (t-distributed Stochastic Neighbor Embedding) and UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction). How you interpret the project depends on the details of the algorithm.  For example, t-SNE does not necessarily place points that are very different far apart and so the distance between clusters is usually meaningless.  UMAP, on the other hand, does this more strictly.
 
 - t-SNE: [van der Maaten and Hinton, 2008](https://jmlr.org/papers/v9/vandermaaten08a.html)
 - UMAP: [McInnes et al., 2018](https://arxiv.org/abs/1802.03426)
