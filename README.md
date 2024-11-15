@@ -1,6 +1,17 @@
+<img src="resources/single-cell-banner.jpg" width=1200>
+
 # Overview
 
-This is a single cell analysis web application built with `scanpy` and `streamlit`.  It provides a simple, customizable user interface for the common scRNA-Seq preprocessing and analysis tasks.
+This is a single cell analysis web application built with `scanpy` and `streamlit`.  It provides a simple, customizable user interface for the common scRNA-Seq preprocessing and analysis tasks.  
+
+- [Setup](#setup)
+- [Running](#running)
+- [Screenshots](#screenshots)
+- [Deployment](#deployment)
+
+![Web App Demo](resources/single-cell-web-app-demo.mp4)
+
+A demo version has been deployed to Azure and is available at [https://mattperkett.com/single-cell/](https://mattperkett.com/single-cell/). See the [Screenshots](#screenshots) section for an overview of the different preprocessing and analysis tasks implemented.
 
 - Loading Data
 - Quality Control
@@ -19,7 +30,7 @@ Instructions are provided to set up the web application to run locally with the 
 
 ```shell
 # clone the repo
-git clone git@github.com:mrperkett/single-cell-streamlit.git
+git clone https://github.com/mrperkett/single-cell-streamlit.git
 cd single-cell-streamlit
 
 # set up a new virtual environment
@@ -35,7 +46,7 @@ python3 -m pip install -r requirements.txt
 
 ```shell
 # clone the repo
-git clone git@github.com:mrperkett/single-cell-streamlit.git
+git clone https://github.com/mrperkett/single-cell-streamlit.git
 cd single-cell-streamlit
 
 # build the docker image
@@ -131,3 +142,52 @@ Collecting usage statistics. To deactivate, set browser.gatherUsageStats to fals
 ```
 
 View the web application at the URL printed in the terminal (by default [http://localhost:8501/](http://localhost:8501/)).
+
+
+# Screenshots
+
+## Introduction
+
+<img src="resources/screenshot-introduction.png" width=1000>
+
+## Loading Data
+
+<img src="resources/screenshot-load-data.png" width=1000>
+
+
+## Quality Control
+
+<img src="resources/screenshot-quality-control.png" width=1000>
+
+
+## Doublet Detection
+
+<img src="resources/screenshot-doublet-detection.png" width=1000>
+
+
+## Normalization
+
+<img src="resources/screenshot-normalization.png" width=1000>
+
+
+## Feature Selection
+
+<img src="resources/screenshot-feature-selection.png" width=1000>
+
+
+## Dimensional Reduction: PCA
+
+<img src="resources/screenshot-pca.png" width=1000>
+
+
+## Dimensional Reduction: UMAP / t-SNE
+
+<img src="resources/screenshot-projection.png" width=1000>
+
+
+## Clustering
+
+<img src="resources/screenshot-clustering.png" width=1000>
+
+
+# Deployment
