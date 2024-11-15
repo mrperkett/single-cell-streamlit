@@ -13,6 +13,7 @@ COPY requirements.txt requirements.txt
 COPY app.py app.py
 COPY pages/ pages/
 COPY utils/ utils/
+COPY resources/ resources/
 
 RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r requirements.txt
