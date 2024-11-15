@@ -9,7 +9,7 @@ This is a single cell analysis web application built with `scanpy` and `streamli
 - [Screenshots](#screenshots)
 - [Deployment](#deployment)
 
-![Web App Demo](resources/single-cell-web-app-demo.mp4)
+https://github.com/user-attachments/assets/858cd95f-9900-4ded-a33f-f9ccb18e345c
 
 A demo version has been deployed to Azure and is available at [https://mattperkett.com/single-cell/](https://mattperkett.com/single-cell/). See the [Screenshots](#screenshots) section for an overview of the different preprocessing and analysis tasks implemented.
 
