@@ -92,7 +92,7 @@ class Page:
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page
@@ -128,6 +128,11 @@ class Page:
         # Display Quality Control information after it has been run
         if self.state.quality_control_complete:
             display_qc_info(self.state.adata)
+        else:
+            st.markdown(
+                "⚠️ Load Data has not yet been run. Select the desired dataset on the left"
+                " and click *Load* to continue."
+            )
 
 
 if "load_data" in st.session_state:

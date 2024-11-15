@@ -103,7 +103,7 @@ class Page:
             display_projections_by_percent_mt(self.state.normalized_adata)
         else:
             st.markdown(
-                "PCA has not been run.  Select the desired parameters on the left and"
+                "⚠️ PCA has not been run.  Select the desired parameters on the left and"
                 " click *Run PCA* to continue."
             )
 
@@ -127,12 +127,18 @@ class Page:
         st.session_state.pca = self.state
 
     def run(self):
-        st.markdown("# Dimensional Reduction: PCA")
-        page_step_number = st.session_state.page_completion_order.index("dim_reduction_pca")
+        text = """# Dimensional Reduction: PCA
+
+This steps aims to further reduce the dimensionality of the dataset, which is possible since not all of the remaining features are informative when clustering based on expression profiles. This helps to greatly reduce data complexity and speeds up downstream processing steps without sacrificing accuracy.
+
+Principal Component Analysis (PCA) is a technique that transforms the data into a new set of uncorrelated "principal components" (i.e. eigenvectors). Principal components are linear combinations of the original dataset. Since principal components are ranked from highest to lowest variance, it is often sufficient to keep only the top 10-50 principal components.
+"""
+        st.markdown(text)
+        page_step_number = st.session_state.page_completion_order.index("pca")
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page
@@ -143,7 +149,7 @@ class Page:
 
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            set_downstream_pages_to_not_complete("dim_reduction_pca")
+            set_downstream_pages_to_not_complete("pca")
 
         self.display_pca_results()
 

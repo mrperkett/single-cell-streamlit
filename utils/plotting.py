@@ -90,36 +90,36 @@ def get_mitochondrial_umi_distribution_plot(adata):
 def display_umi_count_gene_count_scatterplot(adata):
     fig = get_umi_count_gene_count_scatterplot(adata)
     st.pyplot(fig)
-    with st.expander(" More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander(" More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_log_umi_count_log_gene_count_jointplot(adata):
     fig = get_log_umi_count_log_gene_count_jointplot(adata)
     st.pyplot(fig)
-    with st.expander(" More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander(" More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_get_umi_distribution_plot(adata):
     fig = get_umi_distribution_plot(adata)
     st.pyplot(fig)
-    with st.expander(" More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander(" More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_gene_distribution_plot(adata):
     fig = get_gene_distribution_plot(adata)
     st.pyplot(fig)
-    with st.expander(" More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander(" More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_mitochondrial_umi_distribution_plot(adata):
     fig = get_mitochondrial_umi_distribution_plot(adata)
     st.pyplot(fig)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_doublet_detection_info(adata, algorithm="Scrublet"):
@@ -147,8 +147,8 @@ def display_doublet_detection_info_scrublet(adata):
 
     fig = get_scrublet_detected_doublet_distribution_plot(adata)
     st.pyplot(fig)
-    with st.expander(" More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander(" More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def get_scrublet_detected_doublet_distribution_plot(adata):
@@ -180,7 +180,6 @@ def display_highly_variable_genes_plot(adata):
 
 
 def display_ranked_pca_importance(adata):
-    # MRP
     data = [
         [n, variance_ratio] for n, variance_ratio in enumerate(adata.uns["pca"]["variance_ratio"])
     ]
@@ -199,8 +198,8 @@ def display_ranked_pca_importance(adata):
     ax.set_xticklabels(xticklabels)
 
     st.pyplot(fig)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_cumulative_pca_importance(adata):
@@ -224,8 +223,8 @@ def display_cumulative_pca_importance(adata):
     ax.set_xticklabels(xticklabels)
 
     st.pyplot(fig)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def get_top_principal_component_genes(adata, num_principal_components=3, keep_top_n=5):
@@ -268,13 +267,13 @@ def display_top_principal_component_genes(adata):
 
     st.markdown("#### Genes with the Largest Principal Component Values")
     st.dataframe(all_top_df)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
     st.markdown("#### Genes with the Smallest Principal Component Values")
     st.dataframe(all_bottom_df)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_projections_by_sample(adata):
@@ -287,8 +286,8 @@ def display_projections_by_sample(adata):
     )
     fig = plt.gcf()
     st.pyplot(fig)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_projections_by_percent_mt(adata):
@@ -301,8 +300,8 @@ def display_projections_by_percent_mt(adata):
     )
     fig = plt.gcf()
     st.pyplot(fig)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_umap_results(adata):
@@ -336,8 +335,8 @@ def display_tsne_results(adata):
     )
     fig = plt.gcf()
     st.pyplot(fig)
-    with st.expander("More Info", expanded=False, icon="💭"):
-        st.write("description")
+    # with st.expander("More Info", expanded=False, icon="💭"):
+    #     st.write("description")
 
 
 def display_clustering(adata, clustering_method, visualization_type):
@@ -409,7 +408,10 @@ def display_qc_info_comparison(adata, filtered_adata=None):
         if filtered_adata:
             st.dataframe(df_general_filtered, width=300)
         else:
-            st.markdown("Click *Apply Filters* to see filtered plots")
+            st.markdown(
+                "⚠️ Quality Control has not been run. Select the desired dataset on the"
+                " left and click *Apply Filters* to continue"
+            )
 
     # (UMI count / cell) vs (gene count / cell) colored by (% MT)
     st.markdown("")

@@ -19,16 +19,18 @@ def run_normalization(adata, exclude_highly_expressed, max_fraction, target_sum)
 
 
 def mark_highly_variable_genes(adata, algorithm, **kwargs):
-    if algorithm == "seurat":
-        sc.pp.highly_variable_genes(adata, n_top_genes=2000, batch_key="sample", flavor=algorithm)
-    elif algorithm == "cell_ranger":
-        sc.pp.highly_variable_genes(adata, n_top_genes=2000, batch_key="sample", flavor=algorithm)
-    elif algorithm == "seurat_v3":
+    if algorithm == "Seurat":
+        sc.pp.highly_variable_genes(adata, n_top_genes=2000, batch_key="sample", flavor="seurat")
+    elif algorithm == "Cell Ranger":
+        sc.pp.highly_variable_genes(
+            adata, n_top_genes=2000, batch_key="sample", flavor="cell_ranger"
+        )
+    elif algorithm == "Seurat v3":
         # Using layer="counts" since documentation states
         # Expects logarithmized data, except when flavor='seurat_v3'/'seurat_v3_paper', in which
         # count data is expected.
         sc.pp.highly_variable_genes(
-            adata, n_top_genes=2000, batch_key="sample", flavor=algorithm, layer="counts"
+            adata, n_top_genes=2000, batch_key="sample", flavor="seurat_v3", layer="counts"
         )
     else:
         raise ValueError(f"algorithm '{algorithm}' not recognized")

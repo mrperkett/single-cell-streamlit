@@ -164,17 +164,26 @@ class Page:
             )
         else:
             st.write(
-                "Clustering has not been run.  Select the desired parameters on the left and click"
-                " *Run Clustering*."
+                "⚠️ Clustering has not been run.  Select the desired parameters on the left and"
+                " click *Run Clustering*."
             )
 
     def run(self):
-        st.markdown("# Clustering")
+        text = """# Clustering
+
+The clustering step is used to identify groups of cells that have similar expression profiles.  Clusters can be used to annotate cell states, types, and cell cycle stages, which is often important in interpretting the dataset.
+
+The goal of clustering is typically to minimize the intra-cluster distance and maximize the inter-cluster distance. KNN (K-Nearest Neighbor) graphs are well-suited to this task for single cell data. They work by building a graph where each point (i.e. cell) is connected to its k (typically 5-100) nearest neighbors. Densely-connected regions of the graph are then detected using community detection algorithms such as the Louvain and Leiden algorithms.  The Leiden algorithm is now the recommended algorithm for this task since a defect in the Louvain algorithm has been found that can lead to "arbitrarily badly connected communities".
+
+- Leiden: [Traag et al., 2019](https://www.nature.com/articles/s41598-019-41695-z)
+- Louvain: [Blondel et al., 2008](https://iopscience.iop.org/article/10.1088/1742-5468/2008/10/P10008)
+"""
+        st.markdown(text)
         page_step_number = st.session_state.page_completion_order.index("clustering")
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page

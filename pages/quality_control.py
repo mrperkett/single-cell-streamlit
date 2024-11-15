@@ -126,7 +126,7 @@ Care should be taken when defining cutoffs since it can be difficult to distingu
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page

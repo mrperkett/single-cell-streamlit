@@ -18,8 +18,8 @@ def main():
         "doublet_detection",
         "normalization",
         "feature_selection",
-        "dim_reduction_pca",
-        "dim_reduction_umap_tsne",
+        "pca",
+        "projection",
         "clustering",
     ]
     if "furthest_step_number_completed" not in st.session_state:

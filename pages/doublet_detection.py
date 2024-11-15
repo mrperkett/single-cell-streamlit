@@ -164,12 +164,12 @@ class Page:
                 )
             else:
                 st.markdown(
-                    "No doublets have been removed.  To remove doublets, click the *Remove "
+                    "⚠️ No doublets have been removed.  To remove doublets, click the *Remove "
                     "Doublets* button."
                 )
         else:
             st.markdown(
-                "Doublet detection has not been run.  Select the desired parameters on the"
+                "⚠️ Doublet detection has not been run.  Select the desired parameters on the"
                 " left and click *Detect Doublets* to continue."
             )
 
@@ -188,7 +188,7 @@ Doublets are two cells that were captured in the same GEM and were sequenced usi
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page

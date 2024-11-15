@@ -124,7 +124,7 @@ class Page:
             "Number of Principal Components",
             min_value=1,
             # TODO: update value after PCA page has been refactored to contain a state class
-            value=st.session_state.num_principal_components,
+            value=st.session_state.pca.num_principal_components,
             help="Number of principal components to use use when running t-SNE (default: 50)",
             disabled=True,
         )
@@ -213,7 +213,7 @@ class Page:
                 )
         else:
             st.markdown(
-                "UMAP / t-SNE Projection has not been run.  Select the desired parameters on"
+                "⚠️ UMAP / t-SNE Projection has not been run.  Select the desired parameters on"
                 " the left and click *Run Dimensional Reduction*"
             )
 
@@ -221,12 +221,21 @@ class Page:
         st.session_state.projection = self.state
 
     def run(self):
-        st.markdown("# Dimensional Reduction: UMAP/t-SNE")
-        page_step_number = st.session_state.page_completion_order.index("dim_reduction_umap_tsne")
+        text = """# Dimensional Reduction: UMAP/t-SNE
+
+This step creates a 2-dimensional projection of the dataset where each point represents a cell and the spacing between points reflects the similarity/dissimilarity of the expression profiles between cells.  Points that are close to each other have similar expression profiles.  This technique is used to visualize the full dataset and aids in data exploration.
+
+The two most common projection algorithms are t-SNE (t-distributed Stochastic Neighbor Embedding) and UMAP (Uniform Manifold Approximation and Projection for Dimension Reduction). How you interpret the project depends on the details of the algorithm.  For example, t-SNE does not necessarily place points that are very different far apartment and so the distance between clusters is usually meaningless.  UMAP, on the other hand, does this more strictly.
+
+- t-SNE: [van der Maaten and Hinton, 2008](https://jmlr.org/papers/v9/vandermaaten08a.html)
+- UMAP: [McInnes et al., 2018](https://arxiv.org/abs/1802.03426)
+"""
+        st.markdown(text)
+        page_step_number = st.session_state.page_completion_order.index("projection")
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page
@@ -235,7 +244,7 @@ class Page:
             self.run_dimensional_reduction_projection()
             # update with furthest step completed and reset downstream pages to show not complete
             st.session_state.furthest_step_number_completed = page_step_number
-            set_downstream_pages_to_not_complete("dim_reduction_umap_tsne")
+            set_downstream_pages_to_not_complete("projection")
         self.display_projection()
 
 

@@ -44,7 +44,7 @@ class Page:
 
     def display_sidebar(self):
         # TODO: drop seurat_v3 support for now since it needs tweaking
-        options_list = ["seurat", "cell_ranger"]
+        options_list = ["Seurat", "Cell Ranger"]
         self.state.user_sel_feature_selection_algorithm = st.sidebar.selectbox(
             "Algorithm to detect highly variable genes",
             options=options_list,
@@ -73,12 +73,21 @@ class Page:
         st.session_state.feature_selection = self.state
 
     def run(self):
-        st.markdown("# Feature Selection")
+        text = """# Feature Selection
+
+The Feature Selection step removes uninformative genes which do not represent meaningful biological variation across samples. This is a dimensional reduction technique aimed to make downstream analysis faster and more accurate.  It is typical for 500-2,000 variable genes to be identified for further analysis.
+
+Two methods implemented in `scanpy` are available for feature selection.
+
+- Seurat: based on [Satija et al., 2015](https://www.nature.com/articles/nbt.3192)
+- Cell Ranger: [Zheng et al., 2017](https://www.nature.com/articles/ncomms14049)
+"""
+        st.markdown(text)
         page_step_number = st.session_state.page_completion_order.index("feature_selection")
 
         # If the previous step has not been completed, display a message to the user and return
         if st.session_state.furthest_step_number_completed < page_step_number - 1:
-            st.write("Please complete the previous step before running this step")
+            st.write("⚠️ Please complete the previous step before running this step")
             return
 
         # Otherwise, run the page
@@ -94,7 +103,7 @@ class Page:
             display_highly_variable_genes_plot(self.state.normalized_adata)
         else:
             st.write(
-                "Feature selection has not been run. Select the desired parameters on the"
+                "⚠️ Feature selection has not been run. Select the desired parameters on the"
                 " left and click *Run Feature Selection* to continue."
             )
 
